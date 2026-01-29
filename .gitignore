@@ -1,0 +1,35 @@
+# ===== Python =====
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# ===== macOS =====
+.DS_Store
+
+# ===== Roblox / Rojo =====
+*.rbxl
+*.rbxl.lock
+*.rbxlx
+*.rbxm
+*.rbxm.lock
+
+# ===== Logs =====
+*.log
+
+# ===== Editor / Temp =====
+*.swp
+*.tmp
+*.bak
+*.bak2
+
+# ===== Node / Tooling (もし使ったら) =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Assets / Temp =====
+images/
+
+

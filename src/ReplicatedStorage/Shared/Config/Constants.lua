@@ -53,6 +53,10 @@ C.Events = {
 	ToggleSkateboard = "ToggleSkateboard",
 	SkateboardStateSync = "SkateboardStateSync",
 	SkateboardGrindJump = "SkateboardGrindJump",
+	
+	-- Grind
+	GrindStarted = "GrindStarted",
+	GrindEnded = "GrindEnded",
 
 	-- Spawn
 	RequestSpawn = "RequestSpawn",
@@ -118,6 +122,7 @@ C.Attr = {
 C.Tag = {
 	Can = "CAN",
 	Breakable = "BREAKABLE",
+	GrindRail = "GRIND_RAIL",
 }
 
 -- 缶の色インデックス（ハンマーの制限判定用）

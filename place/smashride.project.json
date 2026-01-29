@@ -2,29 +2,12 @@
   "name": "smashride",
   "tree": {
     "$className": "DataModel",
+    "$path": "place/SmashRide.map.rbxl",
 
-    "ReplicatedStorage": {
-      "$path": "../src/ReplicatedStorage"
-    },
-
-    "ServerScriptService": {
-      "$path": "../src/ServerScriptService"
-    },
-
-    "ServerStorage": {
-      "$path": "../src/ServerStorage"
-    },
-
-    "StarterGui": {
-      "$path": "../src/StarterGui"
-    },
-
-    "StarterPlayer": {
-      "$path": "../src/StarterPlayer"
-    },
-
-    "Workspace": {
-      "$path": "../src/Workspace"
-    }
+    "ReplicatedStorage": { "$path": "src/ReplicatedStorage" },
+    "ServerScriptService": { "$path": "src/ServerScriptService" },
+    "StarterPlayer": { "$path": "src/StarterPlayer" },
+    "StarterGui": { "$path": "src/StarterGui" },
+    "StarterPack": { "$path": "src/StarterPack" }
   }
 }
