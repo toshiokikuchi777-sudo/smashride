@@ -1,69 +1,61 @@
 --// InputAutoFix.client.lua
---// ボタンクリック後の入力ブロッキングを自動的に検出・修正
+--// ボタンクリック後の入力ブロッキングを自動的に検出・修正（安定版）
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
-local ContextActionService = game:GetService("ContextActionService")
 
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
-print("[InputAutoFix] Active - Monitoring for input blocking issues...")
-
--- 状態変数
-local lastClickTime = 0
-local wasMoving = false
+print("[InputAutoFix] Stable Version Active")
 
 ----------------------------------------------------------------
 -- 入力ブロッキング検出 & 自動修復
 ----------------------------------------------------------------
 local function autoFixInputBlocking()
-    -- 1. Modal を強制解除
-    if UserInputService.ModalEnabled then
-        warn("[InputAutoFix] ModalEnabled was TRUE - Forcing FALSE")
-        UserInputService.ModalEnabled = false
-    end
-    
-    -- 2. SelectedObject をクリア
-    if GuiService.SelectedObject then
-        warn("[InputAutoFix] SelectedObject was set - Clearing")
-        GuiService.SelectedObject = nil
-    end
-    
-    -- 3. Character 状態を確認
+    -- 1. キャラクターの歩行速度をチェック
     local char = player.Character
-    if char then
-        local root = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChildOfClass("Humanoid")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local isMovementStuck = hum and hum.WalkSpeed == 0
+    
+    -- アンケート中などは意図的に 0 なので除外
+    local survey = PlayerGui:FindFirstChild("SurveyGui")
+    local isSurveyVisible = survey and survey:FindFirstChild("Overlay") and survey.Overlay.Visible
+    
+    if isMovementStuck and not isSurveyVisible then
+        warn("[InputAutoFix] Movement stuck detected! Repairing...")
+        hum.WalkSpeed = 16
         
-        if root and root.Anchored then
-            warn("[InputAutoFix] RootPart was ANCHORED - Unanchoring")
-            root.Anchored = false
+        -- 移動不能時のみ、原因と思われる項目をリセット
+        if UserInputService.ModalEnabled then
+            UserInputService.ModalEnabled = false
+            warn("[InputAutoFix] ModalEnabled forced to FALSE")
         end
         
-        if hum then
-            if hum.WalkSpeed == 0 then
-                warn("[InputAutoFix] WalkSpeed was 0 - Restoring to 16")
-                hum.WalkSpeed = 16
-            end
-            
-            if hum.PlatformStand then
-                warn("[InputAutoFix] PlatformStand was TRUE - Setting FALSE")
-                hum.PlatformStand = false
-            end
+        if GuiService.SelectedObject then
+            GuiService.SelectedObject = nil
+            warn("[InputAutoFix] SelectedObject cleared")
         end
     end
     
-    -- 4. 大きな Active=true の透明フレームを無効化
-    for _, gui in ipairs(PlayerGui:GetDescendants()) do
-        if gui:IsA("Frame") and gui.Active and gui.Visible then
-            local size = gui.AbsoluteSize
-            if size.X > 500 and size.Y > 400 then
-                if gui.BackgroundTransparency >= 0.95 then
-                    warn("[InputAutoFix] Disabling large invisible active Frame:", gui.Name)
-                    gui.Active = false
+    -- 2. 大きな Active=true の透明オブジェクトを定期的に掃除 (これ自体は副作用が少ない)
+    for _, obj in ipairs(PlayerGui:GetDescendants()) do
+        if obj:IsA("GuiObject") and obj.Active and obj.Visible then
+            local size = obj.AbsoluteSize
+            local screen = PlayerGui:FindFirstChildOfClass("ScreenGui") and PlayerGui:FindFirstChildOfClass("ScreenGui").AbsoluteSize or Vector2.new(1000, 1000)
+            
+            if size.X > screen.X * 0.8 and size.Y > screen.Y * 0.8 then
+                local isTransparent = false
+                if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
+                    isTransparent = (obj.BackgroundTransparency >= 0.95)
+                elseif obj:IsA("CanvasGroup") then
+                    isTransparent = (obj.GroupTransparency >= 0.95) or (obj.BackgroundTransparency >= 0.95)
+                end
+                
+                if isTransparent then
+                    warn("[InputAutoFix] Deactivating transparent blocking object:", obj:GetFullName())
+                    obj.Active = false
                 end
             end
         end
@@ -71,35 +63,16 @@ local function autoFixInputBlocking()
 end
 
 ----------------------------------------------------------------
--- マウスクリック監視
-----------------------------------------------------------------
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        lastClickTime = tick()
-        
-        -- クリック0.5秒後に自動修復を試行
-        task.delay(0.5, function()
-            autoFixInputBlocking()
-        end)
-    end
-end)
-
-----------------------------------------------------------------
--- 定期チェック（2秒ごと）
+-- 定期チェック（3秒ごと安全に実行）
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
-        task.wait(2)
+        task.wait(3)
         autoFixInputBlocking()
     end
 end)
 
-----------------------------------------------------------------
--- キャラクター変更時に状態をリセット
-----------------------------------------------------------------
-player.CharacterAdded:Connect(function(char)
-    task.wait(0.5)
-    autoFixInputBlocking()
-end)
+-- 初期実行も少し遅らせる
+task.delay(2, autoFixInputBlocking)
 
-print("[InputAutoFix] Initialized Successfully")
+print("[InputAutoFix] Initialized (Safe periodic check only).")

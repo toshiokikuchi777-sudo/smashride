@@ -15,8 +15,8 @@ local MoneyDrop = require(game:GetService("ServerScriptService").Core.MoneyDrop)
 local CanService = require(game:GetService("ServerScriptService").Services.CanService)
 
 -- 状態管理
-local activeChests = {} -- [chestId] = {model, type, spawnedAt, despawnAt, claimed}
-local chestTemplates = ServerStorage:WaitForChild("Templates"):WaitForChild("Chests")
+local activeChests = {}
+-- テンプレートは関数内で取得
 
 -- Remote定義
 Net.E("ChestSpawned")
@@ -36,6 +36,19 @@ end
 
 -- 宝箱をスポーンさせる
 function ChestService.SpawnChest(chestType, targetPosition)
+	local templates = ServerStorage:FindFirstChild("Templates")
+	local chestTemplates = templates and templates:FindFirstChild("Chests")
+	
+	-- Workspace からも探す（Argon 同期や手動配置の考慮）
+	if not chestTemplates then
+		chestTemplates = workspace:FindFirstChild("Chests")
+	end
+	
+	if not chestTemplates then 
+		warn("[ChestService] Chests folder missing in ServerStorage.Templates and Workspace")
+		return 
+	end
+	
 	local template = chestTemplates:FindFirstChild("Chest_" .. chestType)
 	if not template then
 		warn("[ChestService] テンプレートが見つかりません:", chestType)

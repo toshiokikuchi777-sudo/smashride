@@ -28,14 +28,15 @@ end
 -- スケボーモデルのテンプレート取得（modelId ベース）
 local function getSkateboardTemplate(modelId)
 	local templates = ServerStorage:FindFirstChild("Templates")
-	if not templates then
-		warn("[SkateboardService] ServerStorage/Templates not found!")
-		return nil
+	local skateboards = templates and templates:FindFirstChild("Skateboards")
+	
+	-- Workspace からも探す（Argon 同期や手動移動の考慮）
+	if not skateboards then
+		skateboards = workspace:FindFirstChild("Skateboards")
 	end
 	
-	local skateboards = templates:FindFirstChild("Skateboards")
 	if not skateboards then
-		warn("[SkateboardService] Skateboards folder not found!")
+		warn("[SkateboardService] Skateboards folder not found in ServerStorage.Templates or Workspace!")
 		return nil
 	end
 	
@@ -61,20 +62,11 @@ local function getPlayerSkateboardConfig(player)
 end
 
 -- スケボーを装備
-function SkateboardService.EquipSkateboard(player)
-	print("[SkateboardService] EquipSkateboard:", player.Name)
-	
-	-- デバッグ：現在の状態を確認
-	local currentState = playerSkateboards[player]
-	if currentState then
-		print("[SkateboardService] Current state - equipped:", currentState.equipped, "model:", currentState.model ~= nil)
-	else
-		print("[SkateboardService] No current state found")
-	end
+function SkateboardService.EquipSkateboard(player, boardId)
+	print("[SkateboardService] EquipSkateboard:", player.Name, "Board:", boardId or "Auto")
 	
 	-- 既に装備中の場合は一旦解除
 	if playerSkateboards[player] and playerSkateboards[player].equipped then
-		print("[SkateboardService] Unequipping old skateboard first")
 		SkateboardService.UnequipSkateboard(player)
 	end
 	
@@ -85,9 +77,19 @@ function SkateboardService.EquipSkateboard(player)
 	if not humanoid or not rootPart then return false end
 	
 	-- プレイヤーの装備中スケボー設定を取得
-	local config = getPlayerSkateboardConfig(player)
+	local config
+	if boardId and boardId ~= "" then
+		config = SkateboardShopConfig.Skateboards[boardId]
+	else
+		config = getPlayerSkateboardConfig(player)
+	end
+
+	if not config then 
+		warn("[SkateboardService] Failed to determine board config")
+		return false 
+	end
+
 	local template = getSkateboardTemplate(config.modelId)
-	
 	if not template then
 		warn("[SkateboardService] Template not found for:", config.modelId)
 		return false

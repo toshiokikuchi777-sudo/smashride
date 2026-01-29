@@ -1,6 +1,7 @@
 -- ReplicatedStorage/Shared/Schema/PlayerSchema.lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Contracts = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Contracts"))
+local HammerShopConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("HammerShopConfig"))
 
 local PlayerSchema = {}
 
@@ -18,6 +19,24 @@ local function ensureStage(v)
   v = ensureNumber(v, 1)
   if v < 1 then v = 1 end
   return math.floor(v)
+end
+
+local function normalizeHammerId(id)
+  if type(id) ~= "string" then return nil end
+
+  local upper = string.upper(id)
+  if upper == "NONE" then return "NONE" end
+  if HammerShopConfig.Hammers[upper] then
+    return upper
+  end
+
+  for hammerId, config in pairs(HammerShopConfig.Hammers) do
+    if type(config.modelId) == "string" and string.upper(config.modelId) == upper then
+      return hammerId
+    end
+  end
+
+  return upper
 end
 
 -- 指示書 2/8: 生データを必ず安全な形に補正する
@@ -74,7 +93,7 @@ function PlayerSchema.Normalize(raw)
   -- cansSmashedTotal は負数禁止
   if data.cansSmashedTotal < 0 then data.cansSmashedTotal = 0 end
   
-  -- スターターペットの保証（最低限のプレイアビリティ）
+  -- スターターペットの保証（最低限의 플레이아비리티）
   local hasStarter = false
   for _, petId in ipairs(data.ownedPets) do
     if petId == "Pet_Starter" then hasStarter = true break end
@@ -102,12 +121,41 @@ function PlayerSchema.Normalize(raw)
   end
   
   -- ハンマーの初期保証
+  local normalizedHammers = {}
+  local seenHammers = {}
+  for _, hammerId in ipairs(data.ownedHammers) do
+    local normalizedId = normalizeHammerId(hammerId)
+    if normalizedId and not seenHammers[normalizedId] then
+      seenHammers[normalizedId] = true
+      table.insert(normalizedHammers, normalizedId)
+    end
+  end
+  data.ownedHammers = normalizedHammers
+
+  data.equippedHammer = normalizeHammerId(data.equippedHammer) or "NONE"
+  if data.equippedHammer == "NONE" then
+    data.equippedHammer = "NONE"
+  end
+
   local hasBasicHammer = false
   for _, hammerId in ipairs(data.ownedHammers) do
     if hammerId == "BASIC" then hasBasicHammer = true break end
   end
   if not hasBasicHammer then
     table.insert(data.ownedHammers, 1, "BASIC")
+  end
+
+  if data.equippedHammer ~= "NONE" then
+    local ownsEquipped = false
+    for _, hammerId in ipairs(data.ownedHammers) do
+      if hammerId == data.equippedHammer then
+        ownsEquipped = true
+        break
+      end
+    end
+    if not ownsEquipped then
+      data.equippedHammer = "BASIC"
+    end
   end
 
   return data

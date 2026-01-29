@@ -4,6 +4,7 @@ local PromotionService = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Players = game:GetService("Players")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local DataService = require(ServerScriptService.Services.DataService)

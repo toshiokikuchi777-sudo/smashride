@@ -333,7 +333,7 @@ function GrindService.Init()
 	end
 	
 	-- メインループ開始
-	RunService.Heartbeat:Connect(onHeartbeat)
+	-- RunService.Heartbeat:Connect(onHeartbeat)
 	
 	-- プレイヤー退出時のクリーンアップ
 	Players.PlayerRemoving:Connect(function(player)

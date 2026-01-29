@@ -9,8 +9,8 @@ local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 
 local Net = require(ReplicatedStorage.Shared.Net)
--- local CanService = require(game:GetService("ServerScriptService").Services.CanService) -- 循環参照回避のため関数内へ移動
-local moneyTemplate = ServerStorage:WaitForChild("Templates"):WaitForChild("Money"):WaitForChild("GoldCoin")
+-- local CanService = require(game:GetService("ServerScriptService").Services.CanService)
+-- テンプレートは関数内で取得
 
 -- モジュール初期化
 function MoneyDrop.Init()
@@ -19,6 +19,14 @@ end
 
 -- お金をスポーンさせる
 function MoneyDrop.SpawnMoney(position, totalReward, count, scale)
+	local templates = ServerStorage:FindFirstChild("Templates")
+	local moneyFolder = templates and templates:FindFirstChild("Money")
+	local moneyTemplate = moneyFolder and moneyFolder:FindFirstChild("GoldCoin")
+	
+	if not moneyTemplate then
+		warn("[MoneyDrop] Money template not found in ServerStorage")
+		return
+	end
 	scale = scale or 2.0
 	count = count or 3
 	local rewardPerCoin = math.floor(totalReward / count)
@@ -149,6 +157,11 @@ end
 
 -- 視覚効果専用のお金スポーン（タッチ判定なし）
 function MoneyDrop.SpawnVisualMoney(position, count, scale)
+	local templates = ServerStorage:FindFirstChild("Templates")
+	local moneyFolder = templates and templates:FindFirstChild("Money")
+	local moneyTemplate = moneyFolder and moneyFolder:FindFirstChild("GoldCoin")
+	
+	if not moneyTemplate then return end
 	count = count or 3
 	
 	local dropFolder = workspace:FindFirstChild("DroppedItems")

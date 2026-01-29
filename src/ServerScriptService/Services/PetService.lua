@@ -5,10 +5,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local RequestPetInventory = Remotes:WaitForChild("RequestPetInventory")
-local RequestEquipPet = Remotes:WaitForChild("RequestEquipPet")
-local PetInventorySync = Remotes:WaitForChild("PetInventorySync")
+local Net = require(ReplicatedStorage.Shared.Net)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 
 -- Models
 local Models = ReplicatedStorage:FindFirstChild("Models")
@@ -377,7 +375,7 @@ end
 ----------------------------------------------------------------
 function PetService.SendSync(player)
     print("[PetService] Sending Sync to", player.Name)
-    PetInventorySync:FireClient(player, {
+    Net.E("PetInventorySync"):FireClient(player, {
         ownedPets = PetService.GetOwnedPets(player),
         equippedPets = PetService.GetEquippedPets(player)
     })
@@ -388,7 +386,7 @@ end
 ----------------------------------------------------------------
 local function setupRemotes()
     -- 1. Request Inventory
-    function RequestPetInventory.OnServerInvoke(player)
+    Net.F("RequestPetInventory").OnServerInvoke = function(player)
         return {
             ownedPets = PetService.GetOwnedPets(player),
             equippedPets = PetService.GetEquippedPets(player)
@@ -396,7 +394,7 @@ local function setupRemotes()
     end
 
     -- 2. Request Equip
-    RequestEquipPet.OnServerEvent:Connect(function(player, slotIndex, petIdOrEmpty)
+    Net.On("RequestEquipPet", function(player, slotIndex, petIdOrEmpty)
         print("[PetService] Remote RequestEquipPet:", player.Name, slotIndex, petIdOrEmpty)
         local ok = PetService.SetEquippedPet(player, slotIndex, petIdOrEmpty)
         if ok then

@@ -5,11 +5,8 @@ print("[PetInventoryController] Module loading...")
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-
-local RequestPetInventory = Remotes:WaitForChild("RequestPetInventory")
-local RequestEquipPet = Remotes:WaitForChild("RequestEquipPet")
-local PetInventorySync = Remotes:WaitForChild("PetInventorySync")
+local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 
 local player = Players.LocalPlayer
 local pgui = player:WaitForChild("PlayerGui")
@@ -181,7 +178,7 @@ local function setupUI()
 	unequipAllBtn.TextSize = 20
 	Instance.new("UICorner", unequipAllBtn).CornerRadius = UDim.new(0, 15)
 	unequipAllBtn.Activated:Connect(function()
-		for i = 1, 3 do RequestEquipPet:FireServer(i, "") end
+		for i = 1, 3 do Net.Fire("RequestEquipPet", i, "") end
 	end)
 
 	detailPanel = Instance.new("Frame", bg)
@@ -405,7 +402,7 @@ function PetInventoryController.Init()
 			if not selectedPetId or selectedPetId == "" then return end
 			local isEq = (equippedPets[i] == selectedPetId)
 			print("[PetInventory] Equip requested for slot", i, "pet:", selectedPetId)
-			RequestEquipPet:FireServer(i, isEq and "" or selectedPetId)
+			Net.Fire("RequestEquipPet", i, isEq and "" or selectedPetId)
 		end)
 	end
 
@@ -416,7 +413,7 @@ function PetInventoryController.Init()
 			opening = true
 			print("[PetInventory] PetsButton Activated")
 			if not petFrame.Enabled then
-				local data = RequestPetInventory:InvokeServer()
+				local data = Net.Invoke("RequestPetInventory")
 				onSync(data)
 			end
 			petFrame.Enabled = not petFrame.Enabled
@@ -426,7 +423,7 @@ function PetInventoryController.Init()
 		warn("[PetInventory] PetsButton not found after setupUI!")
 	end
 	
-	PetInventorySync.OnClientEvent:Connect(onSync)
+	Net.On("PetInventorySync", onSync)
 end
 
 return PetInventoryController

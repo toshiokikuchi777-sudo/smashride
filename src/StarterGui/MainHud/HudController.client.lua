@@ -5,11 +5,13 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local Remotes = ReplicatedStorage:WaitForChild("Remotes")
-local SetEquippedHammer = Remotes:WaitForChild("SetEquippedHammer")
-local EquipHammerRequest = Remotes:WaitForChild("EquipHammerRequest")
-local ScoreChanged = Remotes:WaitForChild("ScoreChanged")
-local UnlockStateSync = Remotes:WaitForChild("UnlockStateSync")
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
+local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+
+local SetEquippedHammer = Net.E("SetEquippedHammer")
+local EquipHammerRequest = Net.E("EquipHammerRequest")
+local ScoreChanged = Net.E("ScoreChanged")
+local UnlockStateSync = Net.E("UnlockStateSync")
 
 local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("GameConfig"))
 local UnlockText = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("UnlockText"))
@@ -18,16 +20,62 @@ local UIStyle = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("U
 local gui = script.Parent
 
 -- [STEP 0] UI References
-local hammerPanel = gui:WaitForChild("HammerPanel")
-local statusLabel = hammerPanel:FindFirstChild("StatusLabel") or gui:FindFirstChild("StatusLabel", true)
+local function ensureHammerPanel()
+    local panel = gui:FindFirstChild("HammerPanel")
+    if not panel then
+        warn("[HudController] HammerPanel missing! Creating fallback...")
+        panel = Instance.new("Frame")
+        panel.Name = "HammerPanel"
+        panel.Size = UDim2.new(0.3, 0, 0.5, 0)
+        panel.Position = UDim2.new(0.98, 0, 0.5, 0)
+        panel.AnchorPoint = Vector2.new(1, 0.5)
+        panel.BackgroundTransparency = 0.5
+        panel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        panel.Parent = gui
+        
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0, 5)
+        layout.Parent = panel
+        
+        Instance.new("UICorner", panel)
+    end
+    return panel
+end
 
--- Reparent Buttons
-local buttonNames = {"Button_Basic", "Button_Shockwave", "Button_Multi", "Button_Hybrid", "Button_Master"}
-for _, bName in ipairs(buttonNames) do
+local hammerPanel = ensureHammerPanel()
+local statusLabel = hammerPanel:FindFirstChild("StatusLabel")
+if not statusLabel then
+    statusLabel = Instance.new("TextLabel")
+    statusLabel.Name = "StatusLabel"
+    statusLabel.Size = UDim2.new(1, 0, 0, 40)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.TextColor3 = Color3.new(1, 1, 1)
+    statusLabel.Font = Enum.Font.FredokaOne
+    statusLabel.TextScaled = true
+    statusLabel.Parent = hammerPanel
+end
+
+-- Reparent Buttons or Create Fallbacks
+local buttonNames = {
+    BASIC = "Button_Basic",
+    SHOCKWAVE = "Button_Shockwave",
+    MULTI = "Button_Multi",
+    HYBRID = "Button_Hybrid",
+    MASTER = "Button_Master"
+}
+
+for hammerId, bName in pairs(buttonNames) do
     local btn = gui:FindFirstChild(bName, true)
-    if btn and btn.Parent == statusLabel then
+    if not btn then
+        warn("[HudController] Creating fallback button for:", hammerId)
+        btn = Instance.new("TextButton")
+        btn.Name = bName
+        btn.Size = UDim2.new(1, 0, 0, 35)
+        btn.Text = hammerId
         btn.Parent = hammerPanel
-        print("[HudController] Reparented button to HammerPanel:", bName)
+        Instance.new("UICorner", btn)
+    elseif btn.Parent ~= hammerPanel then
+        btn.Parent = hammerPanel
     end
 end
 
@@ -40,7 +88,7 @@ if gachaPanel then
     end
 end
 
--- Mapping Hammer IDs to Buttons
+-- Mapping Hammer IDs to Buttons (Recursive Search)
 local HammerButtons = {
     BASIC = gui:FindFirstChild("Button_Basic", true),
     SHOCKWAVE = gui:FindFirstChild("Button_Shockwave", true),
@@ -49,8 +97,7 @@ local HammerButtons = {
     MASTER = gui:FindFirstChild("Button_Master", true),
 }
 
-local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
-local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+
 
 local function forceEquip(hammerId)
     print("[HudController] Attempting to equip:", hammerId)
