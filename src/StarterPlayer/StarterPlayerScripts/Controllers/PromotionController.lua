@@ -11,6 +11,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local Net = require(ReplicatedStorage.Shared.Net)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 local PromotionConfig = require(ReplicatedStorage.Shared.Config.PromotionConfig)
 local RewardUI = require(ReplicatedStorage.Client.UI.RewardUI)
 local MoneyVFX = require(ReplicatedStorage.Client.VFX.MoneyVFX)
@@ -22,7 +23,7 @@ local GuiService = game:GetService("GuiService")
 
 function PromotionController.Init()
 	-- サーバーからの報酬通知受信
-	Net.On("RewardNotification", function(data)
+	Net.On(Constants.Events.RewardNotification, function(data)
 		PromotionController.ShowRewardEffect(data)
 	end)
 
@@ -56,7 +57,7 @@ function PromotionController.OpenCommunityPrompt()
 	-- 外部リンク（グループページ）を開く
 	local url = "https://www.roblox.com/groups/" .. groupId
 	print("Opening Community URL:", url)
-	-- 注意: GuiService:OpenBrowserWindow 等はRobloxの仕様により使用制限がある場合がありますが、
+	-- 注意: GuiService:OpenBrowserWindow 等はRoblox.の仕様により使用制限がある場合がありますが、
 	-- 本来はリンクボタン等を用意するのが安全です。ここでは導線としてprint+説明を表示します。
 	
 	PromotionController.ShowMainNotification(PromotionConfig.CommunityReward.JoinPromptText)
@@ -91,7 +92,7 @@ function PromotionController.ShowMainNotification(message)
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, 0, 1, 0)
 	label.BackgroundTransparency = 1
-	label.Text = message
+	label.Text = message or "通知" -- nil チェック
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextSize = 24
 	label.Font = Enum.Font.GothamBold
@@ -172,17 +173,26 @@ function PromotionController.OpenFeedbackUI()
 	
 	yesBtn.Activated:Connect(function()
 		if player:GetAttribute("HasClaimedFeedback") == true then return end
-		Net.Fire("ClaimFeedbackReward")
+		Net.Fire(Constants.Events.ClaimFeedbackReward)
 		sg:Destroy()
 		_rewardPromptGui = nil
 	end)
 	
+	-- 閉じるボタン (右上の×ボタン)
 	local closeBtn = Instance.new("TextButton")
-	closeBtn.Size = UDim2.new(1, 0, 1, 0)
-	closeBtn.BackgroundTransparency = 1
-	closeBtn.Text = ""
-	closeBtn.ZIndex = 0
-	closeBtn.Parent = sg
+	closeBtn.Size = UDim2.new(0, 40, 0, 40)
+	closeBtn.Position = UDim2.new(1, -45, 0, 5)
+	closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	closeBtn.Text = "✕"
+	closeBtn.TextColor3 = Color3.new(1, 1, 1)
+	closeBtn.TextSize = 24
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.Parent = frame
+	
+	local closeBtnCorner = Instance.new("UICorner")
+	closeBtnCorner.CornerRadius = UDim.new(0, 8)
+	closeBtnCorner.Parent = closeBtn
+	
 	closeBtn.Activated:Connect(function()
 		sg:Destroy()
 		_rewardPromptGui = nil

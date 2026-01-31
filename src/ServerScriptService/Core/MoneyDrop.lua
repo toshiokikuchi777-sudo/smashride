@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 local Debris = game:GetService("Debris")
 
 local Net = require(ReplicatedStorage.Shared.Net)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 -- local CanService = require(game:GetService("ServerScriptService").Services.CanService)
 -- テンプレートは関数内で取得
 
@@ -143,7 +144,7 @@ function MoneyDrop.ClaimMoney(player, coinInstance)
 	end
 	
 	-- クライアントへ演出通知（音とエフェクト）
-	Net.E("MoneyCollected"):FireClient(player, pos, rewardValue)
+	Net.E(Constants.Events.MoneyCollected):FireClient(player, pos, rewardValue)
 	print(string.format("[MoneyDrop] 🔊 Sent MoneyCollected to %s at %.1f,%.1f,%.1f with value %d", player.Name, pos.X, pos.Y, pos.Z, rewardValue))
 	
 	-- 確実に消去

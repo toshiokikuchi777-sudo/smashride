@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "7e7369c2d77aeee8",
+        "id": "3a2fd647d61556b5",
         "type": "tabs",
         "children": [
           {
-            "id": "9907024f5e188522",
+            "id": "87c470bbccb96e6c",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -70,7 +70,8 @@
               "title": "ブックマーク"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -173,9 +174,24 @@
       "daily-notes:今日のデイリーノートを開く": false,
       "templates:テンプレートを挿入": false,
       "command-palette:コマンドパレットを開く": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "obsidian-git:Open Git source control": false
     }
   },
-  "active": "9907024f5e188522",
-  "lastOpenFiles": []
+  "active": "87c470bbccb96e6c",
+  "lastOpenFiles": [
+    "images/default.project.json.old",
+    "images/smashride.rbxl",
+    "images/smashride_export.rbxlx",
+    "images/setup_grind_rails.lua",
+    "src/StarterPlayer/StarterPlayerScripts/Controllers/EventController.lua",
+    "src/ReplicatedStorage/Client/UI/EventUI.lua",
+    "src/ServerScriptService/SetupFeedbackPrompt.server.lua",
+    "src/ReplicatedStorage/Remotes",
+    "src/StarterPlayer/StarterPlayerScripts/Controllers/CanController/Script.lua",
+    "src/StarterPlayer/StarterPlayerScripts/Controllers/CanController",
+    "src/StarterPlayer/StarterPlayerScripts/ClickDiagnostic.client.lua",
+    "2026-01-29.md",
+    "無題のファイル.md"
+  ]
 }

@@ -1,15 +1,14 @@
--- EventConfig.lua
--- イベント全体の設定(レインボー宝箱ボーナスタイム等)
+-- ReplicatedStorage/Shared/Config/EventConfig.lua
+-- ボーナスイベントの設定
 
 local EventConfig = {}
 
--- イベント定義
 EventConfig.Events = {
-	RAINBOW_CHEST = {
-		id = "RAINBOW_CHEST",
-		displayName = "レインボーボーナスタイム",
-		duration = 10, -- 1分に短縮
-		interval = 10, -- 5分おき
+	RAINBOW_BONUS = {
+		id = "RAINBOW_BONUS",
+		displayName = "レインボー・ボーナス!",
+		duration = 45, -- 秒 (デモ用に短縮)
+		interval = 10, -- 秒 (デモ用に短縮)
 		
 		spawnMode = {
 			spawnEverySeconds = 0.5,
@@ -35,10 +34,10 @@ EventConfig.Events = {
 		id = "FACE_TARGET_BONUS",
 		displayName = "フェイスパニック!",
 		duration = 45,
-		interval = 10, -- 8分おき (宝箱イベントとは被らないように調整)
+		interval = 10,
 		
 		spawnMode = {
-			spawnEverySeconds = 3, -- 少し間隔を空けてスポーン
+			spawnEverySeconds = 3,
 			spawnChance = 0.8
 		},
 		
@@ -53,7 +52,7 @@ EventConfig.Events = {
 		id = "PIGGY_BANK_BONUS",
 		displayName = "ポーク・フィーバー!",
 		duration = 45,
-		interval = 10, -- 被らないように調整されている想定
+		interval = 10,
 		
 		spawnMode = {
 			spawnEverySeconds = 2,
@@ -71,9 +70,7 @@ EventConfig.Events = {
 -- 次のイベントまでの時間を計算(秒)
 function EventConfig.GetTimeUntilNextEvent(eventId, lastEventEndTime)
 	local event = EventConfig.Events[eventId]
-	if not event then
-		return 0
-	end
+	if not event then return 0 end
 	
 	local currentTime = os.time()
 	local nextEventTime = lastEventEndTime + event.interval
@@ -85,9 +82,7 @@ end
 -- イベントの残り時間を計算(秒)
 function EventConfig.GetEventRemainingTime(eventId, eventStartTime)
 	local event = EventConfig.Events[eventId]
-	if not event then
-		return 0
-	end
+	if not event then return 0 end
 	
 	local currentTime = os.time()
 	local elapsed = currentTime - eventStartTime

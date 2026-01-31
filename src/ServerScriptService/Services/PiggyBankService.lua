@@ -10,6 +10,7 @@ local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 local PiggyBankConfig = require(ReplicatedStorage.Shared.Config.PiggyBankConfig)
 local MoneyDrop = require(game:GetService("ServerScriptService").Core.MoneyDrop)
 
@@ -31,7 +32,7 @@ function PiggyBankService.Init()
 	end
 	
 	-- ヒットリクエストの受信設定 (FaceTargetServiceと同じ関数名だが別管理)
-	Net.On("FaceTargetHit", PiggyBankService.OnHit)
+	Net.On(Constants.Events.FaceTargetHit, PiggyBankService.OnHit)
 	
 	print("[PiggyBankService] 初期化完了")
 end
@@ -119,7 +120,7 @@ function PiggyBankService.SpawnPiggy(targetType, targetPosition, spawnPart)
 	}
 	
 	-- クライアント通知 (既存のキーを使用)
-	Net.Fire("FaceTargetSpawned", {
+	Net.Fire(Constants.Events.FaceTargetSpawned, {
 		targetId = targetId,
 		targetType = targetType,
 		position = model:GetPivot().Position,
@@ -148,11 +149,15 @@ function PiggyBankService.OnHit(player, targetId)
 	data.hp = math.max(0, data.hp - 1)
 	data.model:SetAttribute(PiggyBankConfig.AttrHP, data.hp)
 	
-	Net.Fire("FaceTargetDamaged", {
+	Net.Fire(Constants.Events.FaceTargetDamaged, {
 		targetId = targetId,
 		newHP = data.hp,
 		hitterUserId = player.UserId
 	})
+
+	-- [FIX] ショックウェーブを発生させる
+	local CanService = require(game:GetService("ServerScriptService").Services.CanService)
+	CanService.CheckAndTriggerShockwave(player, data.model:GetPivot().Position)
 	
 	if data.hp <= 0 then
 		data.isDestroying = true
@@ -177,9 +182,9 @@ function PiggyBankService.OnDestroyed(targetId, destroyer)
 	
 	-- 演出
 	MoneyDrop.SpawnVisualMoney(pos, config.coinCount, 9.0)
-	Net.E("MoneyCollected"):FireClient(destroyer, pos, config.rewardAmount)
+	Net.E(Constants.Events.MoneyCollected):FireClient(destroyer, pos, config.rewardAmount)
 	
-	Net.E("FaceTargetDestroyed"):FireClient(destroyer, {
+	Net.E(Constants.Events.FaceTargetDestroyed):FireClient(destroyer, {
 		targetId = targetId,
 		displayName = config.displayName,
 		totalReward = config.rewardAmount

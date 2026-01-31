@@ -11,6 +11,7 @@ local SkateboardController = {}
 
 local player = Players.LocalPlayer
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 local SkateboardConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("SkateboardConfig"))
 
 -- スケボーの状態
@@ -26,7 +27,7 @@ end
 -- スケボーをトグル
 function SkateboardController.ToggleSkateboard()
     print("[SkateboardController] Toggle skateboard")
-    local ToggleSkateboardEvent = Net.E("ToggleSkateboard")
+    local ToggleSkateboardEvent = Net.E(Constants.Events.ToggleSkateboard)
     ToggleSkateboardEvent:FireServer()
 end
 
@@ -56,8 +57,8 @@ end
 function SkateboardController.Init()
     print("[SkateboardController] Init")
     
-    local ToggleSkateboardEvent = Net.E("ToggleSkateboard")
-    local SkateboardStateSync = Net.E("SkateboardStateSync")
+    local ToggleSkateboardEvent = Net.E(Constants.Events.ToggleSkateboard)
+    local SkateboardStateSync = Net.E(Constants.Events.SkateboardStateSync)
     
     -- アニメーション設定 (R15 MainModule由来)
     local ANIM_IDS = {
@@ -68,20 +69,18 @@ function SkateboardController.Init()
         Kick = "rbxassetid://742703564"
     }
     
-    -- サウンド設定
     local SOUND_IDS = {
         CruiseLoop = "rbxassetid://96481249", -- ロードノイズ
-        Ollie = "rbxassetid://22921446",      -- ジャンプ音
-        Drop = "rbxassetid://22920550"       -- 着地音
+        Ollie = "rbxassetid://22921446"      -- ジャンプ音
     }
-
+    
     local activeTracks = {}
     local activeSounds = {}
     local currentMainAnim = nil
-    -- スケボーの状態
-    local isEquipped = false
-    local originalRootC0 = nil
     
+    -- 接地感とサイドスタンス(90度回転)のための微調整オフセット
+    local ROOT_OFFSET = CFrame.new(0, -0.2, 0) * CFrame.Angles(0, math.rad(-90), 0)
+    local originalRootC0 = nil
     local renderConn = nil
     local jumpingConn = nil
 
@@ -217,7 +216,6 @@ function SkateboardController.Init()
                         -- 着地を検知 (Freefallからの着地)
                         if old == Enum.HumanoidStateType.Freefall or old == Enum.HumanoidStateType.Jumping then
                             print("[SkateboardController] Landed!")
-                            if activeSounds.Drop then activeSounds.Drop:Play() end
                         end
                         -- 地面に着いたらオーリーを強制終了
                         if activeTracks.Ollie and activeTracks.Ollie.IsPlaying then

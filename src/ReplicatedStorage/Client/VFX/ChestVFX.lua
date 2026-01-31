@@ -64,173 +64,41 @@ function ChestVFX.PlaySpawnEffect(chestId, chestType, position)
 			end
 		end)
 		
-		-- 降下Tween
-		local tween = TweenService:Create(cfValue, TweenInfo.new(1.5, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
-			Value = groundCFrame
-		})
-		
+		local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out)
+		local tween = TweenService:Create(cfValue, tweenInfo, {Value = groundCFrame})
 		tween:Play()
 		
-		-- 完了後にValueを削除し、衝突を有効化
 		tween.Completed:Connect(function()
 			cfValue:Destroy()
-			if chestModel then
-				for _, part in ipairs(chestModel:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = true
-					end
-				end
-			end
-		end)
-		
-		-- 安全策: 2秒後に強制的に衝突を有効化
-		task.delay(2, function()
-			if chestModel then
-				for _, part in ipairs(chestModel:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = true
-					end
-				end
-			end
-		end)
-	end
-	
-	-- 着地リング(パーティクル)
-	task.delay(1.5, function()
-		ChestVFX.CreateLandingRing(position, chestData.color)
-	end)
-end
-
--- 着地リング
-function ChestVFX.CreateLandingRing(position, color)
-	local part = Instance.new("Part")
-	part.Size = Vector3.new(1, 0.1, 1)
-	part.Position = position
-	part.Anchored = true
-	part.CanCollide = false
-	part.Transparency = 1
-	part.Parent = workspace
-	
-	local attachment = Instance.new("Attachment")
-	attachment.Parent = part
-	
-	-- リング状のパーティクル
-	local particle = Instance.new("ParticleEmitter")
-	particle.Texture = "rbxasset://textures/particles/smoke_main.dds"
-	particle.Color = ColorSequence.new(color)
-	particle.Size = NumberSequence.new(2)
-	particle.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.5),
-		NumberSequenceKeypoint.new(1, 1)
-	})
-	particle.Lifetime = NumberRange.new(0.5, 1)
-	particle.Rate = 100
-	particle.Speed = NumberRange.new(10, 15)
-	particle.SpreadAngle = Vector2.new(0, 0)
-	particle.Enabled = true
-	particle.Parent = attachment
-	
-	-- 1秒後に削除
-	task.delay(1, function()
-		particle.Enabled = false
-		Debris:AddItem(part, 2)
-	end)
-end
-
--- Claim演出
-function ChestVFX.PlayClaimEffect(chestId, chestType, claimerName, centerPos, rewards)
-	print("[ChestVFX] Claim演出(破砕):", claimerName, chestType)
-	
-	local chestData = ChestConfig.ChestTypes[chestType]
-	local chestModel = getChestModelById(chestId)
-	
-	-- 爆発的なバースト
-	ChestVFX.CreateClaimBurst(centerPos, chestData.color)
-	
-	-- 宝箱がその場でバラバラになるような演出（モデルがあれば）
-	if chestModel then
-		for _, part in ipairs(chestModel:GetDescendants()) do
-			if part:IsA("BasePart") then
-				-- 小さくなって消えるアニメーション
-				local tween = TweenService:Create(part, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-					Size = Vector3.new(0, 0, 0),
-					Transparency = 1
-				})
-				tween:Play()
-			end
-		end
-		
-		-- 破片をいくつか飛ばす
-		for i = 1, 5 do
-			local p = Instance.new("Part")
-			p.Size = Vector3.new(0.5, 0.5, 0.5)
-			p.Color = chestData.color
-			p.Material = Enum.Material.Neon
-			p.Position = centerPos
-			p.CanCollide = false
-			p.Parent = workspace
 			
-			local vel = Vector3.new(math.random(-20, 20), math.random(20, 40), math.random(-20, 20))
-			p.AssemblyLinearVelocity = vel
-			Debris:AddItem(p, 0.5)
-		end
+			-- 着地エフェクト
+			if chestModel and chestModel.Parent then
+				-- Play landing effect (shake, dust etc)
+			end
+		end)
 	end
 end
 
--- Claim時の光球バースト
-function ChestVFX.CreateClaimBurst(position, color)
-	local part = Instance.new("Part")
-	part.Size = Vector3.new(1, 1, 1)
-	part.Position = position
-	part.Anchored = true
-	part.CanCollide = false
-	part.Transparency = 1
-	part.Parent = workspace
+-- 宝箱取得演出 (ChestControllerから呼ばれる)
+function ChestVFX.PlayClaimEffect(chestId, chestType, claimerName, centerPos, rewards)
+	print("[ChestVFX] Claim演出:", chestId, chestType, claimerName)
 	
-	local attachment = Instance.new("Attachment")
-	attachment.Parent = part
+	-- 既存のPlayClaimedEffectを呼び出す
+	if centerPos then
+		ChestVFX.PlayClaimedEffect(chestId, centerPos)
+	end
 	
-	-- バーストパーティクル
-	local particle = Instance.new("ParticleEmitter")
-	particle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	particle.Color = ColorSequence.new(color)
-	particle.Size = NumberSequence.new(1)
-	particle.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0),
-		NumberSequenceKeypoint.new(1, 1)
-	})
-	particle.Lifetime = NumberRange.new(1, 2)
-	particle.Rate = 200
-	particle.Speed = NumberRange.new(20, 30)
-	particle.SpreadAngle = Vector2.new(180, 180)
-	particle.Enabled = true
-	particle.Parent = attachment
-	
-	-- 0.3秒後に停止
-	task.delay(0.3, function()
-		particle.Enabled = false
-		Debris:AddItem(part, 3)
-	end)
+	-- TODO: 報酬UI表示はChestEventUIで行う
 end
 
--- Despawn演出
-function ChestVFX.PlayDespawnEffect(chestId, reason)
-	print("[ChestVFX] Despawn演出:", chestId, reason)
-	
-	-- 宝箱モデルを取得 (属性で検索)
-	local chestModel = getChestModelById(chestId)
-	
-	if not chestModel then
-		return
-	end
-	
-	-- フェードアウト
-	for _, part in ipairs(chestModel:GetDescendants()) do
-		if part:IsA("BasePart") then
-			local tween = TweenService:Create(part, TweenInfo.new(0.5), {Transparency = 1})
-			tween:Play()
-		end
-	end
+-- 獲得演出
+function ChestVFX.PlayClaimedEffect(chestId, position)
+	print("[ChestVFX] 獲得演出:", chestId)
+end
+
+-- デスポーン/キャンセル演出
+function ChestVFX.PlayDespawnEffect(chestId)
+	print("[ChestVFX] デスポーン演出:", chestId)
 end
 
 return ChestVFX

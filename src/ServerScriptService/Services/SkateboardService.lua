@@ -11,6 +11,7 @@ local SkateboardService = {}
 local SkateboardConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("SkateboardConfig"))
 local SkateboardShopConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("SkateboardShopConfig"))
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 
 -- プレイヤーごとのスケボー状態
 local playerSkateboards = {}
@@ -172,7 +173,7 @@ function SkateboardService.EquipSkateboard(player, boardId)
 	}
 	
 	-- クライアントに状態を同期
-	local SkateboardStateSync = Net.E("SkateboardStateSync")
+	local SkateboardStateSync = Net.E(Constants.Events.SkateboardStateSync)
 	if SkateboardStateSync then
 		SkateboardStateSync:FireClient(player, true)
 	end
@@ -211,7 +212,7 @@ function SkateboardService.UnequipSkateboard(player)
 	playerSkateboards[player] = { equipped = false, model = nil }
 	
 	-- クライアントに状態を同期
-	local SkateboardStateSync = Net.E("SkateboardStateSync")
+	local SkateboardStateSync = Net.E(Constants.Events.SkateboardStateSync)
 	if SkateboardStateSync then
 		SkateboardStateSync:FireClient(player, false)
 	end
@@ -267,8 +268,8 @@ end
 
 function SkateboardService.Init()
 	print("[SkateboardService] Init (Multi-board support)")
-	local ToggleSkateboardEvent = Net.E("ToggleSkateboard")
-	local SkateboardStateSync = Net.E("SkateboardStateSync")
+	local ToggleSkateboardEvent = Net.E(Constants.Events.ToggleSkateboard)
+	local SkateboardStateSync = Net.E(Constants.Events.SkateboardStateSync)
 	
 	ToggleSkateboardEvent.OnServerEvent:Connect(function(p)
 		local success = SkateboardService.ToggleSkateboard(p)

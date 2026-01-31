@@ -2,23 +2,28 @@
   "name": "smashride",
   "tree": {
     "$className": "DataModel",
+    "$ignoreUnknownInstances": true,
     "ReplicatedStorage": {
-      "$path": "src/ReplicatedStorage"
+      "$path": "src/ReplicatedStorage",
+      "$ignoreUnknownInstances": true
     },
     "ServerScriptService": {
-      "$path": "src/ServerScriptService"
-    },
-    "ServerStorage": {
-      "$path": "src/ServerStorage"
+      "$path": "src/ServerScriptService",
+      "$ignoreUnknownInstances": true
     },
     "StarterGui": {
-      "$path": "src/StarterGui"
+      "$ignoreUnknownInstances": true,
+      "MainHud": {
+        "$path": "src/StarterGui/MainHud",
+        "$ignoreUnknownInstances": true
+      }
     },
     "StarterPlayer": {
-      "$path": "src/StarterPlayer"
-    },
-    "Workspace": {
-      "$path": "src/Workspace"
+      "$ignoreUnknownInstances": true,
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts",
+        "$ignoreUnknownInstances": true
+      }
     }
   }
 }

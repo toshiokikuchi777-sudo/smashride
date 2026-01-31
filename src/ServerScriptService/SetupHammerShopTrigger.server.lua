@@ -62,7 +62,7 @@ local function ensureTrigger(hammershop: Instance)
 			prompt.Parent = trigger
 			print("[SetupHammerShopTrigger] ProximityPrompt created on existing Trigger")
 		else
-			print("[SetupHammerShopTrigger] Trigger & ProximityPrompt already exist")
+			-- print("[SetupHammerShopTrigger] Trigger & ProximityPrompt already exist")
 		end
 		return
 	end
@@ -97,7 +97,7 @@ local function ensureTrigger(hammershop: Instance)
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = trigger
 
-	print("[SetupHammerShopTrigger] Trigger & ProximityPrompt created at hammershop pivot")
+	-- print("[SetupHammerShopTrigger] Trigger & ProximityPrompt created at hammershop pivot")
 end
 
 -- 実行

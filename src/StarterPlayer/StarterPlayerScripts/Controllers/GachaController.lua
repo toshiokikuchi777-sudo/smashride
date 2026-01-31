@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
-
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("GameConfig"))
 local UIStyle = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("UIStyle"))
 local PetConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("PetConfig"))
@@ -46,10 +46,10 @@ local RARITY_COLORS = {
 local function updateButtonStates(buttons)
 	for tier, btn in pairs(buttons) do
 		if not btn then continue end
-		
+
 		local isUnlocked = unlockedTiers[tier]
 		local tierColor = TIER_COLORS[tier] or TIER_COLORS.BASIC
-		
+
 		btn.BackgroundColor3 = isUnlocked and tierColor or LOCKED_COLOR
 		btn.AutoButtonColor = isUnlocked and not isRolling
 
@@ -71,10 +71,10 @@ end
 ----------------------------------------------------------------
 local function playGachaEffect(targetPetId, callback)
 	if not effectPanel then return callback() end
-	
+
 	isRolling = true
 	effectPanel.Visible = true
-	
+
 	local petList = {}
 	for id, _ in pairs(PetConfig.All) do
 		if not id:find("Pet_") then continue end -- ペットIDのみ抽出
@@ -83,12 +83,12 @@ local function playGachaEffect(targetPetId, callback)
 
 	local shuffleLabel = effectPanel:FindFirstChild("ShuffleLabel")
 	local bg = effectPanel:FindFirstChild("EffectBG")
-	
+
 	-- 演出アニメーション (高速シャッフル)
 	local duration = 1.5
 	local startTime = os.clock()
 	local waitTime = 0.05
-	
+
 	while os.clock() - startTime < duration do
 		local randomId = petList[math.random(#petList)]
 		local petConf = PetConfig.All[tostring(randomId)]
@@ -106,7 +106,7 @@ local function playGachaEffect(targetPetId, callback)
 		shuffleLabel.Text = finalPet.displayName or targetPetId
 		bg.BackgroundColor3 = RARITY_COLORS[finalPet.rarity] or RARITY_COLORS.Common
 	end
-	
+
 	task.wait(0.5)
 	effectPanel.Visible = false
 	isRolling = false
@@ -145,10 +145,9 @@ function GachaController.Init()
 	if initialized then return end
 	initialized = true
 
-	local RequestGacha = Net.E("RequestGacha")
-	local GachaResult  = Net.E("GachaResult")
-	local UnlockStateSync = Net.E("UnlockStateSync")
-
+	local RequestGacha = Net.E(Constants.Events.RequestGacha)
+	local GachaResult  = Net.E(Constants.Events.GachaResult)
+	local UnlockStateSync = Net.E(Constants.Events.UnlockStateSync)
 	task.spawn(function()
 		local hud = getHud()
 		if not hud then return end
@@ -178,7 +177,7 @@ function GachaController.Init()
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0.3, 0)
 		corner.Parent = gachaShopButton
-		
+
 		local stroke = Instance.new("UIStroke")
 		stroke.Thickness = 2
 		stroke.Color = Color3.fromRGB(0, 0, 0)
@@ -205,19 +204,19 @@ function GachaController.Init()
 			gachaPanel.ZIndex = 100
 			gachaPanel.Parent = gachaGui
 			Instance.new("UICorner", gachaPanel).CornerRadius = UDim.new(0, 20)
-			
+
 			-- 太い黒枠線
 			local bgStroke = Instance.new("UIStroke", gachaPanel)
 			bgStroke.Thickness = 4
 			bgStroke.Color = Color3.fromRGB(0, 0, 0)
 			bgStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-			
+
 			-- 内側の白い枠線（アクセント）
 			local innerStroke = Instance.new("UIStroke", gachaPanel)
 			innerStroke.Thickness = 1.5
 			innerStroke.Color = Color3.fromRGB(255, 255, 255)
 			innerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-			
+
 			local uiScale = Instance.new("UIScale", gachaPanel)
 			local function updateUIScale()
 				if not gachaGui then return end
@@ -228,7 +227,7 @@ function GachaController.Init()
 			end
 			gachaGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateUIScale)
 			updateUIScale()
-			
+
 			local title = Instance.new("TextLabel", gachaPanel)
 			title.Size = UDim2.new(1, -40, 0, 50)
 			title.Position = UDim2.new(0, 20, 0, 10)
@@ -239,7 +238,7 @@ function GachaController.Init()
 			title.Font = Enum.Font.GothamBold
 			title.TextXAlignment = Enum.TextXAlignment.Left
 			title.ZIndex = 101
-			
+
 			local closeButton = Instance.new("TextButton", gachaPanel)
 			closeButton.Name = "CloseButton"
 			closeButton.Size = UDim2.new(0, 50, 0, 50)
@@ -252,7 +251,7 @@ function GachaController.Init()
 			closeButton.ZIndex = 105
 			Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 12)
 		end
-		
+
 		-- 演出用パネル
 		effectPanel = gachaPanel:FindFirstChild("EffectPanel")
 		if not effectPanel then
@@ -263,7 +262,7 @@ function GachaController.Init()
 			effectPanel.BackgroundTransparency = 0.5
 			effectPanel.Visible = false
 			effectPanel.ZIndex = 200
-			
+
 			Instance.new("UICorner", effectPanel).CornerRadius = UDim.new(0, 20)
 
 			local bg = Instance.new("Frame", effectPanel)
@@ -274,7 +273,7 @@ function GachaController.Init()
 			bg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			bg.ZIndex = 201
 			Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
-			
+
 			local sLabel = Instance.new("TextLabel", bg)
 			sLabel.Name = "ShuffleLabel"
 			sLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -284,7 +283,7 @@ function GachaController.Init()
 			sLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 			sLabel.Font = Enum.Font.GothamBold
 			sLabel.ZIndex = 202
-			
+
 			local stroke = Instance.new("UIStroke", sLabel)
 			stroke.Thickness = 3
 			stroke.Color = Color3.fromRGB(0, 0, 0)
@@ -296,7 +295,7 @@ function GachaController.Init()
 		for i, tier in ipairs(tiers) do
 			local old = gachaPanel:FindFirstChild(tier .. "Card")
 			if old then old:Destroy() end
-			
+
 			local tierConf = PetConfig.Tiers[tier] or { cost = 0 }
 			local tierColor = TIER_COLORS[tier] or TIER_COLORS.BASIC
 
@@ -307,12 +306,12 @@ function GachaController.Init()
 			card.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 			card.ZIndex = 101
 			Instance.new("UICorner", card).CornerRadius = UDim.new(0, 16)
-			
+
 			-- カードの枠線
 			local cardStroke = Instance.new("UIStroke", card)
 			cardStroke.Thickness = 2
 			cardStroke.Color = Color3.fromRGB(0, 0, 0)
-				
+
 			local img = Instance.new("ViewportFrame", card) -- ViewportFrameに変更
 			img.Name = "PetPreview"
 			img.Size = UDim2.new(1, -20, 0, 150)
@@ -321,7 +320,7 @@ function GachaController.Init()
 			img.BackgroundTransparency = 0.5
 			img.ZIndex = 102
 			Instance.new("UICorner", img).CornerRadius = UDim.new(0, 12)
-			
+
 			-- 代表ペットの表示設定
 			local previewPetId = (tier == "BASIC") and "Pet_Starter" or (tier == "RARE") and "Pet_Crystal" or "Pet_Cosmic"
 			task.spawn(function()
@@ -347,7 +346,7 @@ function GachaController.Init()
 					end)
 				end
 			end)
-			
+
 			local tl = Instance.new("TextLabel", card)
 			tl.Size = UDim2.new(1, 0, 0, 30)
 			tl.Position = UDim2.new(0, 0, 0, 140)
@@ -357,7 +356,7 @@ function GachaController.Init()
 			tl.TextColor3 = tierColor
 			tl.Font = Enum.Font.GothamBold
 			tl.ZIndex = 102
-				
+
 			local cl = Instance.new("TextLabel", card)
 			cl.Size = UDim2.new(1, 0, 0, 25)
 			cl.Position = UDim2.new(0, 0, 0, 175)
@@ -367,7 +366,7 @@ function GachaController.Init()
 			cl.TextColor3 = Color3.fromRGB(50, 50, 50)
 			cl.Font = Enum.Font.GothamSemibold
 			cl.ZIndex = 102
-				
+
 			local rb = Instance.new("TextButton", card)
 			rb.Name = "RollButton"
 			rb.Size = UDim2.new(1, -20, 0, 45)
@@ -393,7 +392,7 @@ function GachaController.Init()
 			resultPanel.Visible = false
 			resultPanel.ZIndex = 300
 			Instance.new("UICorner", resultPanel).CornerRadius = UDim.new(0, 24)
-			
+
 			local pImg = Instance.new("ViewportFrame", resultPanel)
 			pImg.Name = "PetImage"
 			pImg.Size = UDim2.new(1, -40, 0, 200)
@@ -401,10 +400,10 @@ function GachaController.Init()
 			pImg.BackgroundTransparency = 1
 			pImg.ZIndex = 301
 			Instance.new("UICorner", pImg).CornerRadius = UDim.new(0, 16)
-			
+
 			local cam = Instance.new("Camera", pImg)
 			pImg.CurrentCamera = cam
-			
+
 			local pName = Instance.new("TextLabel", resultPanel)
 			pName.Name = "PetNameLabel"
 			pName.Size = UDim2.new(1, 0, 0, 40)
@@ -413,7 +412,7 @@ function GachaController.Init()
 			pName.TextSize = 28
 			pName.Font = Enum.Font.GothamBold
 			pName.ZIndex = 301
-			
+
 			local rLbl = Instance.new("TextLabel", resultPanel)
 			rLbl.Name = "RarityLabel"
 			rLbl.Size = UDim2.new(1, 0, 0, 30)
@@ -421,7 +420,7 @@ function GachaController.Init()
 			rLbl.BackgroundTransparency = 1
 			rLbl.TextSize = 20
 			rLbl.ZIndex = 301
-			
+
 			local rClose = Instance.new("TextButton", resultPanel)
 			rClose.Name = "ResultCloseButton"
 			rClose.Size = UDim2.new(1, -40, 0, 50)
@@ -438,7 +437,7 @@ function GachaController.Init()
 
 		-- バインド
 		gachaShopButton.Activated:Connect(function() gachaPanel.Visible = not gachaPanel.Visible end)
-		
+
 		local cBtn = gachaPanel:FindFirstChild("CloseButton")
 		if cBtn then
 			cBtn.Activated:Connect(function() gachaPanel.Visible = false end)
@@ -473,28 +472,28 @@ function GachaController.Init()
 				playGachaEffect(payload.petId, function()
 					local petConf = PetConfig.All[tostring(payload.petId)] or {}
 					local modelId = PetConfig.GetModelId(payload.petId)
-					
+
 					resultPanel.PetNameLabel.Text = petConf.displayName or payload.petId
 					resultPanel.RarityLabel.Text = string.format("%s - %s", petConf.rarity or "Common", payload.isNew and "NEW!" or "Duplicate")
-					
+
 					-- 3Dモデル表示の更新
 					local pImg = resultPanel:FindFirstChild("PetImage")
 					if pImg and pImg:IsA("ViewportFrame") then
 						pImg:ClearAllChildren()
-						
+
 						local Models = ReplicatedStorage:FindFirstChild("Models")
 						local PetModels = Models and Models:FindFirstChild("Pets")
 						local petTemplate = PetModels and PetModels:FindFirstChild(modelId)
-						
+
 						if petTemplate then
 							local petClone = petTemplate:Clone()
 							petClone:PivotTo(CFrame.new(0, 0, 0))
 							petClone.Parent = pImg
-							
+
 							local camera = Instance.new("Camera")
 							pImg.CurrentCamera = camera
 							camera.Parent = pImg
-							
+
 							-- 結果表示は確実性を期すため少し長めに待つ
 							task.delay(0.05, function()
 								if not petClone or not camera then return end
@@ -505,7 +504,7 @@ function GachaController.Init()
 								camera.CFrame = CFrame.new(cf.Position + Vector3.new(dist * 0.5, dist * 0.4, -dist), cf.Position)
 							end)
 						end
-						
+
 						-- 背景色の設定（レアリティに合わせるが、透明度を調整）
 						local rarityColor = RARITY_COLORS[petConf.rarity] or RARITY_COLORS.Common
 						local bg = Instance.new("Frame", pImg)
@@ -516,13 +515,13 @@ function GachaController.Init()
 						bg.ZIndex = pImg.ZIndex - 1
 						Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
 					end
-					
+
 					resultPanel.Visible = true
 					updateButtonStates(buttons) -- ボタンを復帰
 				end)
 			end)
 		end
-		
+
 		bindWorldTrigger()
 	end)
 end

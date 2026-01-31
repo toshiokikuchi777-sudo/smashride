@@ -1,4 +1,3 @@
-
 -- ReplicatedStorage/Shared/Contracts.lua
 local Contracts = {}
 
@@ -40,4 +39,3 @@ Contracts.GachaTiers = {
 }
 
 return Contracts
-  

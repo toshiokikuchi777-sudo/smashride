@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Signal = require(ReplicatedStorage.Shared.Signal)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 
 local localPlayer = Players.LocalPlayer
 
@@ -43,10 +44,9 @@ local function startGlobalHeartbeat()
 					totalPetsFound = totalPetsFound + 1
 					local offset = PET_OFFSETS[slot] or PET_OFFSETS[1]
 					
-					-- [FIX] 目標CFrameの計算（水平方向の向きのみを抽出）
+					-- 目標CFrameの計算
 					local targetPos = root.Position + root.CFrame:VectorToWorldSpace(offset)
-					
-					-- プレイヤーの水平方向の向きだけを抽出して適用（ひっくり返りを防止）
+					-- [FIX] プレイヤーの水平方向の向きだけを抽出して適用（ひっくり返りを防止）
 					local _, yRotation, _ = root.CFrame:ToEulerAnglesYXZ()
 					local targetCFrame = CFrame.new(targetPos) * CFrame.Angles(0, yRotation, 0)
 					
@@ -57,11 +57,6 @@ local function startGlobalHeartbeat()
 					slots[slot] = nil
 				end
 			end
-		end
-		
-		-- 全くペットがいなくなっても、プレイヤーの入り待ちなどのためループは維持（または止めて再スキャンで再開）
-		if totalPetsFound == 0 and #Players:GetPlayers() == 1 then
-			-- 特殊な最適化が必要ならここでするが、基本的には回しておいてOK
 		end
 	end)
 end
@@ -111,13 +106,10 @@ local function scanAllPets()
 				
 				if currentPets[p][slot] ~= child then
 					currentPets[p][slot] = child
-					-- print("[PetController] Linked pet for", p.Name, "slot", slot)
 					
-					-- 物理挙動の安定化
+					-- 物理挙動の安定化 (クライアント主導ের PivotTo)
 					for _, part in ipairs(child:GetDescendants()) do
 						if part:IsA("BasePart") then
-							-- 自分がオーナーならネットワークオーナーなのでAnchored=trueで制御
-							-- 他人ならネットワークオーナーではないが、見た目の追従のためAnchored=trueにする
 							part.Anchored = true
 							part.CanCollide = false
 						end
@@ -190,9 +182,9 @@ function PetController.Init()
 		end
 	end)
 
-	-- 倍率同期（ローカルプレイヤーのみ関係するが、コントローラーにあるので維持）
+	-- 倍率同期（ローカルプレイヤーのみ）
 	local Net = require(ReplicatedStorage.Shared.Net)
-	globalScope:Connect(Net.E("EffectStateSync").OnClientEvent, function(payload)
+	globalScope:Connect(Net.E(Constants.Events.EffectStateSync).OnClientEvent, function(payload)
 		if typeof(payload) ~= "table" then return end
 		local petBonusMult = payload.petBonusMult or 1
 		local hammerMult = payload.hammerMult or 1

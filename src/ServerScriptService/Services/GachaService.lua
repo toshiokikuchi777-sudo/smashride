@@ -88,11 +88,12 @@ end
 -- Remote Setup
 ----------------------------------------------------------------
 local Net = require(ReplicatedStorage.Shared.Net)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 
 local function setupRemotes()
-	local RequestGacha = Net.E("RequestGacha")
-	local GachaResult = Net.E("GachaResult")
-	local PetInventorySync = Net.E("PetInventorySync")
+	local RequestGacha = Net.E(Constants.Events.RequestGacha)
+	local GachaResult = Net.E(Constants.Events.GachaResult)
+	local PetInventorySync = Net.E(Constants.Events.PetInventorySync)
 	
 	-- Gacha Handler
 	RequestGacha.OnServerEvent:Connect(function(player, tier)

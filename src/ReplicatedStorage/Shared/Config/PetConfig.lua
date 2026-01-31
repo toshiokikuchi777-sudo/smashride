@@ -37,34 +37,34 @@ PetConfig.All = {
 ----------------------------------------------------------------
 PetConfig.Tiers = {
   BASIC = {
-    cost = 1000, -- 50 -> 1000
+    cost = 100,
+    displayName = "ベーシックガチャ",
     pool = {
-      { id = "Pet_Starter", weight = 30 },
-      { id = "Pet_Lucky",   weight = 30 },
-      { id = "Pet_Pink",    weight = 10 },
-      { id = "Pet_Purple",  weight = 10 },
-      { id = "Pet_Shadow",  weight = 10 },
-      { id = "Pet_Golden",  weight = 5 },
+      { id = "Pet_Starter", weight = 450 },
+      { id = "Pet_Lucky",   weight = 300 },
+      { id = "Pet_Pink",    weight = 150 },
+      { id = "Pet_Purple",  weight = 50 },
+      { id = "Pet_Shadow",  weight = 30 },
+      { id = "Pet_Golden",  weight = 15 },
       { id = "Pet_Crystal", weight = 5 },
     }
   },
-  RARE = {
-    cost = 5000, -- 50000 -> 5000
+  PREMIUM = {
+    cost = 500,
+    displayName = "プレミアムガチャ",
     pool = {
-      { id = "Pet_Pink",    weight = 20 },
-      { id = "Pet_Purple",  weight = 20 },
-      { id = "Pet_Shadow",  weight = 20 },
-      { id = "Pet_Golden",  weight = 15 },
-      { id = "Pet_Crystal", weight = 15 },
-      { id = "Pet_Flame",   weight = 5 },
-      { id = "Pet_Thunder", weight = 5 },
+      { id = "Pet_Golden",  weight = 200 },
+      { id = "Pet_Crystal", weight = 150 },
+      { id = "Pet_Flame",   weight = 100 },
+      { id = "Pet_Thunder", weight = 50 },
+      { id = "Pet_Rainbow", weight = 10 },
+      { id = "Pet_Cosmic",  weight = 5 },
     }
   },
-  LEGEND = {
-    cost = 100000, -- 1000000 -> 100000
+  ULTIMATE = {
+    cost = 2500,
+    displayName = "アルティメットガチャ",
     pool = {
-      { id = "Pet_Golden",  weight = 20 },
-      { id = "Pet_Crystal", weight = 20 },
       { id = "Pet_Flame",   weight = 25 },
       { id = "Pet_Thunder", weight = 25 },
       { id = "Pet_Rainbow", weight = 5 },

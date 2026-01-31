@@ -19,33 +19,55 @@ local activeChests = {}
 -- テンプレートは関数内で取得
 
 -- Remote定義
-Net.E("ChestSpawned")
-Net.E("ChestDespawned")
-Net.E("ChestClaimed")
-Net.E("ChestClaimRequest")
+Net.E(Constants.Events.ChestSpawned)
+Net.E(Constants.Events.ChestDespawned)
+Net.E(Constants.Events.ChestClaimed)
+Net.E(Constants.Events.ChestClaimRequest)
+
+-- フォルダの確保
+local function ensureChestsFolder()
+	local folder = workspace:FindFirstChild("Chests")
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = "Chests"
+		folder.Parent = workspace
+		print("[ChestService] Created missing Workspace.Chests folder")
+	end
+	return folder
+end
 
 -- 初期化
 function ChestService.Init()
 	print("[ChestService] 初期化開始")
 	
+	ensureChestsFolder()
+	
 	-- Claimリクエストの受信設定
-	Net.On("ChestClaimRequest", ChestService.OnClaimRequest)
+	Net.On(Constants.Events.ChestClaimRequest, ChestService.OnClaimRequest)
 	
 	print("[ChestService] 初期化完了")
 end
 
 -- 宝箱をスポーンさせる
 function ChestService.SpawnChest(chestType, targetPosition)
+	-- 1. ServerStorage.Templates.Chests を優先
 	local templates = ServerStorage:FindFirstChild("Templates")
 	local chestTemplates = templates and templates:FindFirstChild("Chests")
 	
-	-- Workspace からも探す（Argon 同期や手動配置の考慮）
+	-- 2. Workspace.MapSettings.Templates.Chests (もしあれば)
 	if not chestTemplates then
-		chestTemplates = workspace:FindFirstChild("Chests")
+		local ms = workspace:FindFirstChild("MapSettings")
+		local mt = ms and ms:FindFirstChild("Templates")
+		chestTemplates = mt and mt:FindFirstChild("Chests")
+	end
+
+	-- 3. Workspace 内の "Chest  " や "Chests" などを探す (フォールバック)
+	if not chestTemplates then
+		chestTemplates = workspace:FindFirstChild("Chests") or workspace:FindFirstChild("Chest  ") or workspace:FindFirstChild("Chest")
 	end
 	
 	if not chestTemplates then 
-		warn("[ChestService] Chests folder missing in ServerStorage.Templates and Workspace")
+		warn("[ChestService] 宝箱テンプレートフォルダが見つかりません (ServerStorage.Templates.Chests 等)")
 		return 
 	end
 	
@@ -88,7 +110,7 @@ function ChestService.SpawnChest(chestType, targetPosition)
 	chestModel:SetAttribute("DespawnAt", despawnAt)
 	chestModel:SetAttribute("CanClaimAt", canClaimAt)
 	
-	chestModel.Parent = game.Workspace.Chests
+	chestModel.Parent = ensureChestsFolder()
 	
 	activeChests[chestId] = {
 		model = chestModel,
@@ -102,7 +124,7 @@ function ChestService.SpawnChest(chestType, targetPosition)
 	}
 	
 	-- 全員にスポーンを通知 (VFX・UI用)
-	Net.Fire("ChestSpawned", {
+	Net.Fire(Constants.Events.ChestSpawned, {
 		chestId = chestId,
 		chestType = chestType,
 		position = finalPos,
@@ -197,14 +219,15 @@ function ChestService.HandleClaimRequest(player, chestId)
 	end
 	
 	-- コイン取得音と報酬額を送信（クライアントへ通知）
-	Net.E("MoneyCollected"):FireClient(player, chestPos, totalReward)
+	-- 第3引数に true を渡して、中央の汎用報酬UI（RewardUI）を抑制する
+	Net.E(Constants.Events.MoneyCollected):FireClient(player, chestPos, totalReward, true)
 	print(string.format("[ChestService] 報酬UIデータを送信: %s (額: %d)", player.Name, totalReward))
 	
 	-- 通知用の変数
 	local nearbyUserIds = {}
 	
 	-- 全員に通知
-	Net.Fire("ChestClaimed", {
+	Net.Fire(Constants.Events.ChestClaimed, {
 		chestId = chestId,
 		chestType = chestInfo.chestType,
 		claimerUserId = player.UserId,
@@ -247,7 +270,7 @@ function ChestService.DespawnChest(chestId, reason)
 	activeChests[chestId] = nil
 	
 	-- 全員に通知
-	Net.Fire("ChestDespawned", {
+	Net.Fire(Constants.Events.ChestDespawned, {
 		chestId = chestId,
 		reason = reason
 	})

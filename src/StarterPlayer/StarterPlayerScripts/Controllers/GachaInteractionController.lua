@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 local UIStyle = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("UIStyle"))
 
 local player = Players.LocalPlayer
@@ -15,6 +16,8 @@ local TIER_MAP = {
 	egg2 = "RARE",
 	egg3 = "LEGEND"
 }
+
+local EGG_NAMES = { "egg1", "egg2", "egg3" }
 
 local PetConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("PetConfig"))
 local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("GameConfig"))
@@ -37,7 +40,7 @@ local function createGachaUI(egg, tier)
 	
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "GachaInteractionUI"
-	billboard.Size = UDim2.new(0, 160, 0, 60)
+	billboard.Size = UDim2.new(0, 160, 0, 80) -- 縦幅を少し広げる
 	billboard.StudsOffset = Vector3.new(0, 4, 0)
 	billboard.AlwaysOnTop = true
 	billboard.Active = true
@@ -46,20 +49,20 @@ local function createGachaUI(egg, tier)
 	local button = Instance.new("TextButton")
 	button.Name = "RollButton"
 	button.Size = UDim2.new(1, 0, 1, 0)
+	button.TextScaled = true
 	
 	if isUnlocked then
-		button.Text = string.format("%s (%d)", tier, info.cost)
+		button.Text = string.format("%s\n(%s SCRAP)", tier, tostring(info.cost))
 		UIStyle.ApplyFlashy(button)
 		
 		button.MouseButton1Click:Connect(function()
-			print("[GachaInteractionController] Button clicked for tier:", tier)
-			local RequestGacha = Net.E("RequestGacha")
+			local RequestGacha = Net.E(Constants.Events.RequestGacha)
 			if RequestGacha then
 				RequestGacha:FireServer(tier)
 			end
 		end)
 	else
-		button.Text = string.format("LOCKED (%d CANS)", info.req)
+		button.Text = string.format("LOCKED\n(%d SMASHED)", info.req)
 		button.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
 		button.TextColor3 = Color3.fromRGB(150, 150, 150)
 		button.AutoButtonColor = false
@@ -73,16 +76,13 @@ local function createGachaUI(egg, tier)
 end
 
 function GachaInteractionController.Init()
-	print("[GachaInteractionController] Init")
+	print("[GachaInteractionController] Init (Dynamic Config)")
 	
-	-- [FIX] 解放状態の同期
-	local UnlockStateSync = Net.E("UnlockStateSync")
+	local UnlockStateSync = Net.E(Constants.Events.UnlockStateSync)
 	if UnlockStateSync then
 		UnlockStateSync.OnClientEvent:Connect(function(payload)
 			if payload and payload.gachaTiers then
 				unlockedTiers = payload.gachaTiers
-				print("[GachaInteractionController] Updated unlockedTiers")
-				-- 既存のUIをリセットして再作成を促す
 				for name, ui in pairs(activeUIs) do
 					ui:Destroy()
 					activeUIs[name] = nil
@@ -93,9 +93,8 @@ function GachaInteractionController.Init()
 
 	RunService.Heartbeat:Connect(function()
 		local character = player.Character
-		if not character then return end
-		local rootPart = character:FindFirstChild("HumanoidRootPart")
-		if not rootPart then return end
+		if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+		local rootPart = character.HumanoidRootPart
 		
 		for _, name in ipairs(EGG_NAMES) do
 			local egg = workspace:FindFirstChild(name)
@@ -106,13 +105,11 @@ function GachaInteractionController.Init()
 					if not activeUIs[name] then
 						local tier = TIER_MAP[name]
 						activeUIs[name] = createGachaUI(egg, tier)
-						print("[GachaInteractionController] Showing UI for", name)
 					end
 				else
 					if activeUIs[name] then
 						activeUIs[name]:Destroy()
 						activeUIs[name] = nil
-						print("[GachaInteractionController] Hiding UI for", name)
 					end
 				end
 			end

@@ -10,6 +10,7 @@ local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 
 local Net = require(ReplicatedStorage.Shared.Net)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 local FaceTargetConfig = require(ReplicatedStorage.Shared.Config.FaceTargetConfig)
 local MoneyDrop = require(game:GetService("ServerScriptService").Core.MoneyDrop)
 
@@ -18,11 +19,11 @@ local activeTargets = {} -- [targetId] = {model, type, hp, maxHP}
 local targetTemplates = nil
 
 -- Remote定義
-Net.E("FaceTargetSpawned")
-Net.E("FaceTargetHit") -- クライアントからのヒット通知
-Net.E("FaceTargetDamaged") -- サーバーからの更新通知
-Net.E("FaceTargetDestroyed")
-Net.E("FaceTargetExpiring") -- 消滅予告
+Net.E(Constants.Events.FaceTargetSpawned)
+Net.E(Constants.Events.FaceTargetHit) -- クライアントからのヒット通知
+Net.E(Constants.Events.FaceTargetDamaged) -- サーバーからの更新通知
+Net.E(Constants.Events.FaceTargetDestroyed)
+Net.E(Constants.Events.FaceTargetExpiring) -- 消滅予告
 
 -- 初期化
 function FaceTargetService.Init()
@@ -44,14 +45,13 @@ function FaceTargetService.Init()
 	end
 	
 	-- ヒットリクエストの受信設定
-	Net.On("FaceTargetHit", FaceTargetService.OnHit)
+	Net.On(Constants.Events.FaceTargetHit, FaceTargetService.OnHit)
 	
 	print("[FaceTargetService] 初期化完了")
 end
 
 -- 顔ターゲットをスポーンさせる
 function FaceTargetService.SpawnFaceTarget(targetType, targetPosition, spawnPart)
-	-- [省略: テンプレート取得ロジックは維持]
 	if not targetTemplates then
 		local templates = ServerStorage:FindFirstChild("Templates")
 		if templates then targetTemplates = templates:FindFirstChild("FaceTargets") end
@@ -181,7 +181,7 @@ function FaceTargetService.SpawnFaceTarget(targetType, targetPosition, spawnPart
 	}
 	
 	-- クライアント通知
-	Net.Fire("FaceTargetSpawned", {
+	Net.Fire(Constants.Events.FaceTargetSpawned, {
 		targetId = targetId,
 		targetType = targetType,
 		position = model:GetPivot().Position, -- 現在の位置を送信
@@ -194,7 +194,7 @@ function FaceTargetService.SpawnFaceTarget(targetType, targetPosition, spawnPart
 		task.delay(config.despawnSeconds - fadeBefore, function()
 			if activeTargets[targetId] then
 				print("[FaceTargetService] フェードアウト開始:", targetId, "残り", fadeBefore, "秒")
-				Net.Fire("FaceTargetExpiring", { targetId = targetId, duration = fadeBefore })
+				Net.Fire(Constants.Events.FaceTargetExpiring, { targetId = targetId, duration = fadeBefore })
 			end
 		end)
 	end
@@ -225,11 +225,15 @@ function FaceTargetService.OnHit(player, targetId)
 	data.hp = math.max(0, data.hp - 1)
 	data.model:SetAttribute(FaceTargetConfig.AttrHP, data.hp)
 	
-	Net.Fire("FaceTargetDamaged", {
+	Net.Fire(Constants.Events.FaceTargetDamaged, {
 		targetId = targetId,
 		newHP = data.hp,
 		hitterUserId = player.UserId
 	})
+
+	-- [FIX] ショックウェーブを発生させる
+	local CanService = require(script.Parent.CanService)
+	CanService.CheckAndTriggerShockwave(player, data.model:GetPivot().Position)
 	
 	if data.hp <= 0 then
 		print("[FaceTargetService] ⚔️ 破壊確定:", targetId:sub(1,8))
@@ -290,11 +294,11 @@ function FaceTargetService.OnDestroyed(targetId, destroyer)
 			print("[FaceTargetService] 報酬直接付与:", p.Name, "額:", amountPerPlayer)
 
 			-- 💰 ポイント獲得UI（ポップアップ）を出す
-			Net.E("MoneyCollected"):FireClient(p, pos, amountPerPlayer)
+			Net.E(Constants.Events.MoneyCollected):FireClient(p, pos, amountPerPlayer)
 
 			-- 個別にサマリーUIを表示させる
 			-- 【重要】Net.E(鍵):FireClient(プレイヤー, データ) の形式で送る
-			Net.E("FaceTargetDestroyed"):FireClient(p, {
+			Net.E(Constants.Events.FaceTargetDestroyed):FireClient(p, {
 				targetId = targetId,
 				displayName = config.displayName,
 				totalReward = amountPerPlayer

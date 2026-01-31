@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SkateboardShopService = {}
 
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 local SkateboardShopConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("SkateboardShopConfig"))
 
 -- DataService と CanService への参照（遅延取得）
@@ -175,21 +176,21 @@ function SkateboardShopService.Init()
 	print("[SkateboardShopService] Init")
 	
 	-- RemoteFunction: スケボー購入
-	local PurchaseSkateboardFunc = Net.F("PurchaseSkateboard")
+	local PurchaseSkateboardFunc = Net.F(Constants.Functions.PurchaseSkateboard)
 	PurchaseSkateboardFunc.OnServerInvoke = function(player, skateboardId)
 		local success, message = SkateboardShopService.PurchaseSkateboard(player, skateboardId)
 		return {success = success, message = message}
 	end
 	
 	-- RemoteFunction: スケボー装備
-	local EquipSkateboardFunc = Net.F("EquipSkateboard")
+	local EquipSkateboardFunc = Net.F(Constants.Functions.EquipSkateboard)
 	EquipSkateboardFunc.OnServerInvoke = function(player, skateboardId)
 		local success = SkateboardShopService.EquipSkateboard(player, skateboardId)
 		return {success = success}
 	end
 	
 	-- RemoteFunction: スケボーデータ取得
-	local GetSkateboardsFunc = Net.F("GetPlayerSkateboards")
+	local GetSkateboardsFunc = Net.F(Constants.Functions.GetPlayerSkateboards)
 	GetSkateboardsFunc.OnServerInvoke = function(player)
 		return SkateboardShopService.GetPlayerSkateboards(player)
 	end

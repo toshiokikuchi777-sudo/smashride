@@ -28,18 +28,18 @@ function Net.E(key)
 	local remoteName = resolveName(Constants.Events, key, "Event")
 	local obj = folder:FindFirstChild(remoteName)
 	if not obj then
-		-- サーバー側またはStudioの編集モードでのみ作成
+		-- サーバー側でのみ作成。クライアント側では作成を禁止し、待機のみとする。
 		local RunService = game:GetService("RunService")
-		if RunService:IsServer() or not RunService:IsRunMode() then
+		if RunService:IsServer() then
 			obj = Instance.new("RemoteEvent")
 			obj.Name = remoteName
 			obj.Parent = folder
 			print(("[Net] Created RemoteEvent: %s"):format(remoteName))
 		else
-			-- クライアント側では待機
-			obj = folder:WaitForChild(remoteName, 30)
+			-- クライアント側では待機（タイムアウトを設ける）
+			obj = folder:WaitForChild(remoteName, 10)
 			if not obj then
-				error(("Net: RemoteEvent '%s' (key=%s) not found under Remotes"):format(remoteName, tostring(key)))
+				error(("Net: RemoteEvent '%s' (key=%s) not found under Remotes (Client side wait timeout)"):format(remoteName, tostring(key)))
 			end
 		end
 	end
@@ -55,9 +55,9 @@ function Net.F(key)
 	local remoteName = resolveName(Constants.Functions, key, "Function")
 	local obj = folder:FindFirstChild(remoteName)
 	if not obj then
-		-- サーバー側またはStudioの編集モードでのみ作成
+		-- サーバー側でのみ作成。
 		local RunService = game:GetService("RunService")
-		if RunService:IsServer() or not RunService:IsRunMode() then
+		if RunService:IsServer() then
 			obj = Instance.new("RemoteFunction")
 			obj.Name = remoteName
 			obj.Parent = folder
@@ -66,7 +66,7 @@ function Net.F(key)
 			-- クライアント側では待機
 			obj = folder:WaitForChild(remoteName, 10)
 			if not obj then
-				error(("Net: RemoteFunction '%s' (key=%s) not found under Remotes"):format(remoteName, tostring(key)))
+				error(("Net: RemoteFunction '%s' (key=%s) not found under Remotes (Client side wait timeout)"):format(remoteName, tostring(key)))
 			end
 		end
 	end
@@ -107,4 +107,3 @@ function Net.Invoke(key, ...)
 end
 
 return Net
-

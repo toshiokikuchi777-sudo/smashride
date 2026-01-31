@@ -29,7 +29,8 @@ local MoneyDrop         = require(ServerScriptService:WaitForChild("Core"):WaitF
 local Net               = require(ReplicatedStorage.Shared.Net)
 
 -- コイン取得イベントを事前に作成（クライアントがリスナーを登録できるようにする）
-Net.E("MoneyCollected")
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
+Net.E(Constants.Events.MoneyCollected)
 
 ----------------------------------------------------------------
 -- Initialize Services (Order Matters)

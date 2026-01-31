@@ -71,9 +71,9 @@ local function renderRowsToTarget(boardData, targetList, tabType)
 			if entry.rank <= 3 then
 				rankLabel.Font = Enum.Font.GothamBold
 				rankLabel.TextColor3 = (entry.rank == 1 and Color3.fromRGB(255, 215, 0))
-									or (entry.rank == 2 and Color3.fromRGB(192, 192, 192))
-									or (entry.rank == 3 and Color3.fromRGB(205, 127, 50))
-									or Color3.new(1,1,1)
+						or (entry.rank == 2 and Color3.fromRGB(192, 192, 192))
+						or (entry.rank == 3 and Color3.fromRGB(205, 127, 50))
+						or Color3.new(1,1,1)
 			end
 		end
 		
@@ -230,7 +230,6 @@ function LeaderboardController.Init()
 			
 			if success and remote then
 				RequestLeaderboard = remote
-				print("[LeaderboardController] RemoteFunction found after", waited, "seconds")
 				break
 			end
 			
@@ -239,7 +238,6 @@ function LeaderboardController.Init()
 		end
 		
 		if not RequestLeaderboard then
-			warn("[LeaderboardController] Failed to find RequestLeaderboard RemoteFunction after", maxWait, "seconds")
 			return
 		end
 		
@@ -249,18 +247,13 @@ function LeaderboardController.Init()
 		end)
 		
 		if success and result then
-			print("[LeaderboardController] Initial data loaded, rev:", result.rev)
 			updateAllLeaderboards(result)
-		else
-			warn("[LeaderboardController] Failed to load initial data:", result)
 		end
 	end)
 
 	-- 3. Listen for sync events
 	local syncEvent = Net.E(Constants.Events.LeaderboardSync)
 	syncEvent.OnClientEvent:Connect(onLeaderboardSync)
-	
-	print("[LeaderboardController] Init complete")
 end
 
 return LeaderboardController

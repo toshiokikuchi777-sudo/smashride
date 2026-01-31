@@ -137,6 +137,18 @@ function HammerShopService.EquipHammer(player, hammerId)
 	
 	-- プレイヤーのAttributeを更新してハンマーを視覚的に反映
 	player:SetAttribute("EquippedHammer", hammerId)
+	print("[HammerShopService] Set EquippedHammer attribute to:", hammerId)
+	
+	-- CanService の updateHammerVisual をトリガー
+	local CS = getCanService()
+	print("[HammerShopService] Got CanService:", CS ~= nil)
+	if CS and CS.UpdateHammerVisual then
+		print("[HammerShopService] Calling UpdateHammerVisual for:", player.Name)
+		CS.UpdateHammerVisual(player)
+		print("[HammerShopService] UpdateHammerVisual called")
+	else
+		warn("[HammerShopService] UpdateHammerVisual not available!")
+	end
 	
 	print("[HammerShopService] Equipped:", player.Name, hammerId)
 	return true

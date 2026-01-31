@@ -6,7 +6,8 @@ local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net")
 local SpawnService = {}
 
 -- スポーンのリクエスト
-local RE_RequestSpawn = Net.E("RequestSpawn")
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
+local RE_RequestSpawn = Net.E(Constants.Events.RequestSpawn)
 
 function SpawnService.TeleportToSpawn(player)
     local char = player.Character

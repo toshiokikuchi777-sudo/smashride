@@ -8,17 +8,21 @@ local Players = game:GetService("Players")
 
 local Net = require(ReplicatedStorage.Shared.Net)
 local DataService = require(ServerScriptService.Services.DataService)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 local PromotionConfig = require(ReplicatedStorage.Shared.Config.PromotionConfig)
 local HammerShopService = require(ServerScriptService.Services.HammerShopService)
 local CanService = require(ServerScriptService.Services.CanService)
 
+-- テスト設定
+local TEST_MODE = false -- 本番運用のためfalseに設定。Studioでテストする場合はtrueに。
+
 -- RemoteEvents
-Net.E("ClaimFeedbackReward") -- クライアントからのリクエスト
-Net.E("RewardNotification")  -- クライアントへの通知
+Net.E(Constants.Events.ClaimFeedbackReward) -- クライアントからのリクエスト
+Net.E(Constants.Events.RewardNotification)  -- クライアントへの通知
 
 function PromotionService.Init()
 	-- フィードバック報酬のリクエスト受信
-	Net.On("ClaimFeedbackReward", function(player)
+	Net.On(Constants.Events.ClaimFeedbackReward, function(player)
 		PromotionService.ClaimFeedback(player)
 	end)
 
@@ -53,7 +57,7 @@ function PromotionService.ClaimFeedback(player)
 	CanService.AddScore(player, amount)
 	
 	-- 通知 (必要なら)
-	Net.Fire("RewardNotification", {
+	Net.Fire(Constants.Events.RewardNotification, {
 		type = "FEEDBACK",
 		message = "👍 THANKS! コインを獲得しました！",
 		amount = amount
@@ -67,7 +71,7 @@ function PromotionService.CheckCommunityReward(player)
 	local data = DataService.Get(player)
 	if not data then return end
 
-	-- フィードバック状態の同期（Attribute）
+	-- フィードバック状態の同期(Attribute)
 	player:SetAttribute("HasClaimedFeedback", data.hasClaimedFeedback == true)
 
 	if data.claimedRainbowHammer then return end
@@ -76,37 +80,47 @@ function PromotionService.CheckCommunityReward(player)
 	if groupId == 0 then return end -- ID未設定時はスキップ
 
 	local isMember = false
-	local ok, result = pcall(function()
-		return player:IsInGroup(groupId)
-	end)
 	
-	if ok and result then
+	-- TEST_MODE: Studioでのテスト用に自動付与
+	if TEST_MODE then
+		print("[PromotionService] TEST_MODE: Auto-granting Rainbow Hammer to", player.Name)
+		isMember = true
+	else
+		-- 本番: グループメンバーシップをチェック
+		local ok, result = pcall(function()
+			return player:IsInGroup(groupId)
+		end)
+		isMember = ok and result
+	end
+	
+	if isMember then
 		-- ハンマー付与
 		data.claimedRainbowHammer = true
 		
 		-- 既に持っていないか確認して追加
 		local hasHammer = false
+		local hammerId = PromotionConfig.CommunityReward.HammerId
 		for _, h in ipairs(data.ownedHammers) do
-			if h == PromotionConfig.CommunityReward.HammerId then
+			if h == hammerId then
 				hasHammer = true
 				break
 			end
 		end
 		
 		if not hasHammer then
-			table.insert(data.ownedHammers, PromotionConfig.CommunityReward.HammerId)
+			table.insert(data.ownedHammers, hammerId)
 		end
 		
 		DataService.MarkDirty(player)
 		
 		-- 獲得演出などのために通知
-		Net.Fire("RewardNotification", {
+		Net.Fire(Constants.Events.RewardNotification, {
 			type = "COMMUNITY",
 			message = PromotionConfig.CommunityReward.CongratsText,
-			hammerId = PromotionConfig.CommunityReward.HammerId
+			hammerId = hammerId
 		}, player)
 		
-		print(string.format("[PromotionService] %s awarded Rainbow Hammer", player.Name))
+		print(string.format("[PromotionService] %s awarded Rainbow Hammer (%s)", player.Name, tostring(hammerId)))
 	end
 end
 

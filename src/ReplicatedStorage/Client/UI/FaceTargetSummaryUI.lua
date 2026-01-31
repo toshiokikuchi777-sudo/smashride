@@ -1,80 +1,64 @@
 -- FaceTargetSummaryUI.lua
--- 顔ターゲット破壊完了時の特別報酬サマリーUI
+-- 顔ターゲット撃破時の集計結果を表示するUI - プレミアムデザイン
 
 local FaceTargetSummaryUI = {}
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
 
--- 設定
-local DISPLAY_DURATION = 3.5
+local DISPLAY_DURATION = 4.0
+
 local COLORS = {
-	Title = Color3.fromRGB(255, 230, 0), -- 鮮やかなイエロー
-	TargetName = Color3.fromRGB(200, 200, 200),
-	Reward = Color3.fromRGB(255, 255, 255)
+	Background = Color3.fromRGB(0, 0, 0),
+	Title = Color3.fromRGB(255, 255, 255),
+	TargetName = Color3.fromRGB(255, 200, 100),
+	Reward = Color3.fromRGB(100, 255, 100)
 }
 
-local _gui = nil
-local function getGui()
-	if _gui then return _gui end
-	
-	local pgui = player:WaitForChild("PlayerGui", 10)
-	if not pgui then 
-		warn("[FaceTargetSummaryUI] PlayerGui not found after 10s")
-		return nil 
-	end
-	
-	_gui = pgui:FindFirstChild("FaceTargetSummaryGui")
-	if not _gui then
-		_gui = Instance.new("ScreenGui")
-		_gui.Name = "FaceTargetSummaryGui"
-		_gui.IgnoreGuiInset = true
-		_gui.DisplayOrder = 110
-		_gui.ResetOnSpawn = false
-		_gui.Parent = pgui
-	end
-	return _gui
-end
-
 function FaceTargetSummaryUI.Show(targetName, totalReward)
-	if not targetName or not totalReward then return end
-	
-	local gui = getGui()
-	if not gui then return end
-	
-	-- コンテナ作成
+	local sg = Instance.new("ScreenGui")
+	sg.Name = "FaceTargetSummary"
+	sg.ResetOnSpawn = false
+	sg.Parent = PlayerGui
+
 	local container = Instance.new("Frame")
-	container.Name = "SummaryContainer"
+	container.Name = "Container"
 	container.Size = UDim2.new(0, 400, 0, 200)
-	container.Position = UDim2.new(0.5, 0, 0.45, 0)
+	container.Position = UDim2.new(0.5, 0, 0.4, 0)
 	container.AnchorPoint = Vector2.new(0.5, 0.5)
-	container.BackgroundTransparency = 1
-	container.Parent = gui
+	container.BackgroundColor3 = COLORS.Background
+	container.BackgroundTransparency = 0.3
+	container.BorderSizePixel = 0
+	container.Parent = sg
 	
-	-- タイトル: TARGET CLEARED!
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.Size = UDim2.new(1, 0, 0, 60)
-	title.Position = UDim2.new(0.5, 0, 0.2, 0)
-	title.AnchorPoint = Vector2.new(0.5, 0.5)
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBlack
-	title.Text = "TARGET CLEARED!"
-	title.TextColor3 = COLORS.Title
-	title.TextSize = 50
-	title.Parent = container
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 20)
+	corner.Parent = container
 	
-	local titleStroke = Instance.new("UIStroke")
-	titleStroke.Thickness = 4
-	titleStroke.Color = Color3.new(0, 0, 0)
-	titleStroke.Parent = title
+	local stroke = Instance.new("UIStroke")
+	stroke.Thickness = 2
+	stroke.Color = Color3.fromRGB(255, 255, 255)
+	stroke.Parent = container
+
+	-- タイトル
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Name = "Title"
+	titleLabel.Size = UDim2.new(1, 0, 0, 40)
+	titleLabel.Position = UDim2.new(0.5, 0, 0.2, 0)
+	titleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Font = Enum.Font.GothamBlack
+	titleLabel.Text = "TARGET SMASHED!"
+	titleLabel.TextColor3 = COLORS.Title
+	titleLabel.TextSize = 32
+	titleLabel.Parent = container
 	
 	-- ターゲット名
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Name = "TargetName"
+	nameLabel.Name = "Name"
 	nameLabel.Size = UDim2.new(1, 0, 0, 30)
 	nameLabel.Position = UDim2.new(0.5, 0, 0.45, 0)
 	nameLabel.AnchorPoint = Vector2.new(0.5, 0.5)

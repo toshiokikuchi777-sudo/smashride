@@ -62,11 +62,11 @@ local function setupUI()
 		inventoryButton = Instance.new("TextButton")
 		inventoryButton.Name = "InventoryButton"
 		inventoryButton.Parent = mainHud
-		
+
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 15)
 		corner.Parent = inventoryButton
-		
+
 		local stroke = Instance.new("UIStroke")
 		stroke.Color = Color3.fromRGB(255, 255, 255)
 		stroke.Thickness = 2
@@ -107,7 +107,7 @@ local function setupUI()
 	bgStroke.Color = Color3.fromRGB(0, 0, 0)
 	bgStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	bgStroke.Parent = bg
-	
+
 	-- 内側の白い枠線（アクセント）
 	local innerStroke = Instance.new("UIStroke")
 	innerStroke.Thickness = 1.5
@@ -144,7 +144,7 @@ local function setupUI()
 	hammerTab.Font = Enum.Font.GothamBold
 	hammerTab.TextSize = 18
 	hammerTab.Parent = bg
-	
+
 	Instance.new("UICorner", hammerTab).CornerRadius = UDim.new(0, 12) -- タブ角丸
 	local hStroke = Instance.new("UIStroke", hammerTab)
 	hStroke.Thickness = 2
@@ -160,7 +160,7 @@ local function setupUI()
 	skateboardTab.Font = Enum.Font.GothamBold
 	skateboardTab.TextSize = 18
 	skateboardTab.Parent = bg
-	
+
 	Instance.new("UICorner", skateboardTab).CornerRadius = UDim.new(0, 12) -- タブ角丸
 	local sStroke = Instance.new("UIStroke", skateboardTab)
 	sStroke.Thickness = 2
@@ -278,7 +278,7 @@ local function setupUI()
 	detailActionButton.Font = Enum.Font.GothamBold
 	detailActionButton.TextSize = 24
 	detailActionButton.Parent = detailPanel
-	
+
 	local btnCorner = Instance.new("UICorner")
 	btnCorner.CornerRadius = UDim.new(0, 15)
 	btnCorner.Parent = detailActionButton
@@ -322,7 +322,7 @@ end
 updateUI = function()
 	if not inventoryFrame then return end
 	local scrollFrame = inventoryFrame.Background.LeftPanel.ScrollFrame
-	
+
 	-- タブのハイライト
 	local bg = inventoryFrame.Background
 	bg.HammerTab.BackgroundColor3 = (currentTab == "HAMMERS") and Color3.fromRGB(0, 190, 245) or Color3.fromRGB(210, 210, 220)
@@ -354,7 +354,7 @@ updateUI = function()
 			local cardCorner = Instance.new("UICorner")
 			cardCorner.CornerRadius = UDim.new(0, 15)
 			cardCorner.Parent = card
-			
+
 			local cardStroke = Instance.new("UIStroke")
 			cardStroke.Thickness = 2
 			cardStroke.Parent = card
@@ -382,7 +382,7 @@ updateUI = function()
 			statusLabel.TextSize = 18
 			statusLabel.Font = Enum.Font.GothamBold
 			statusLabel.Parent = card
-			
+
 			local statusStroke = Instance.new("UIStroke")
 			statusStroke.Thickness = 1.5
 			statusStroke.Color = Color3.new(1, 1, 1)
@@ -399,7 +399,7 @@ updateUI = function()
 				selectedItemId = itemId
 				updateUI()
 			end)
-			
+
 			itemCards[itemId] = card
 		end
 	end
@@ -419,14 +419,14 @@ updateUI = function()
 			detailActionButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
 			return
 		end
-		
+
 		detailName.Text = config.displayName or selectedItemId
 		detailIcon.Image = config.imageAssetId or ""
-		
+
 		if currentTab == "HAMMERS" then
 			detailSpec1.Text = string.format("⚡ ダメージ: x%.1f", config.damageMultiplier or 1.0)
 			local limit = GameConfig.HammerCanLimit[selectedItemId] or 1
-			
+
 			-- 潰せる缶の色リストを作成
 			local canColors = {}
 			if limit >= 1 then table.insert(canColors, "赤") end
@@ -434,7 +434,7 @@ updateUI = function()
 			if limit >= 3 then table.insert(canColors, "緑") end
 			if limit >= 4 then table.insert(canColors, "紫") end
 			if limit >= 5 then table.insert(canColors, "黄") end
-			
+
 			local colorList = table.concat(canColors, ", ")
 			detailSpec2.Text = "🎯 潰せる缶: " .. colorList
 			detailAbility.Text = "🕒 能力: " .. (config.description or "なし")
@@ -468,7 +468,7 @@ end
 ----------------------------------------------------------------
 local function handleEquip()
 	if not selectedItemId then return end
-	
+
 	if currentTab == "HAMMERS" then
 		if playerData.hammers.equipped == selectedItemId then return end
 		local result = EquipHammerFunc:InvokeServer(selectedItemId)
@@ -498,21 +498,21 @@ function InventoryController.Init()
 	EquipSkateboardFunc = Net.F(Constants.Functions.EquipSkateboard)
 
 	setupUI()
-	
+
 	detailActionButton.Activated:Connect(handleEquip)
-	
+
 	inventoryButton.Activated:Connect(function()
 		if opening then return end
 		opening = true
-		
+
 		if not inventoryFrame.Enabled then
 			refreshData()
 			selectedItemId = (currentTab == "HAMMERS") and playerData.hammers.equipped or playerData.skateboards.equipped
 			updateUI()
 		end
-		
+
 		inventoryFrame.Enabled = not inventoryFrame.Enabled
-		
+
 		task.delay(0.3, function() opening = false end)
 	end)
 

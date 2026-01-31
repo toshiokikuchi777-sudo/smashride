@@ -53,7 +53,7 @@ local updateUI
 local function getStatusText(hammerId, config)
 	local owned = table.find(playerData.owned, hammerId) ~= nil
 	local equipped = (playerData.equipped == hammerId) and (playerData.equipped ~= "NONE")
-	
+
 	if equipped then
 		return "装備済み"
 	elseif owned then
@@ -105,7 +105,7 @@ local function setupUI()
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0.3, 0)
 	corner.Parent = shopButton
-	
+
 	local stroke = Instance.new("UIStroke")
 	stroke.Thickness = 2
 	stroke.Color = Color3.new(0, 0, 0)
@@ -128,13 +128,13 @@ local function setupUI()
 	bg.AnchorPoint = Vector2.new(0.5, 0.5)
 	bg.BackgroundColor3 = Color3.fromRGB(160, 230, 50) -- 黄緑テーマ
 	bg.Parent = shopFrame
-	
+
 	-- 太い黒枠線
 	local bgStroke = Instance.new("UIStroke", bg)
 	bgStroke.Thickness = 4
 	bgStroke.Color = Color3.fromRGB(0, 0, 0)
 	bgStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	
+
 	-- 内側の白い枠線（アクセント）
 	local innerStroke = Instance.new("UIStroke", bg)
 	innerStroke.Thickness = 1.5
@@ -161,14 +161,14 @@ local function setupUI()
 		local scaleW = math.min(1, screenSize.X / (targetWidth + 40))
 		uiScale.Scale = math.min(scaleH, scaleW)
 	end
-	
+
 	shopFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateUIScale)
 	updateUIScale()
 
 	local bgCorner = Instance.new("UICorner")
 	bgCorner.CornerRadius = UDim.new(0, 20)
 	bgCorner.Parent = bg
-	
+
 	local bgStroke = Instance.new("UIStroke")
 	bgStroke.Thickness = 4
 	bgStroke.Color = Color3.fromRGB(255, 255, 255)
@@ -187,7 +187,7 @@ local function setupUI()
 	title.Font = Enum.Font.GothamBold
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = bg
-	
+
 	local titleStroke = Instance.new("UIStroke")
 	titleStroke.Thickness = 2
 	titleStroke.Parent = title
@@ -208,7 +208,7 @@ local function setupUI()
 	local closeCorner = Instance.new("UICorner")
 	closeCorner.CornerRadius = UDim.new(0, 12)
 	closeCorner.Parent = closeButton
-	
+
 	local closeStroke = Instance.new("UIStroke")
 	closeStroke.Thickness = 3
 	closeStroke.Color = Color3.new(0, 0, 0)
@@ -262,7 +262,7 @@ local function setupUI()
 		header.Font = Enum.Font.GothamBold
 		header.TextXAlignment = Enum.TextXAlignment.Left
 		header.Parent = sectionFrame
-		
+
 		local hStroke = Instance.new("UIStroke")
 		hStroke.Thickness = 1.5
 		hStroke.Parent = header
@@ -296,7 +296,7 @@ local function setupUI()
 	local detailCorner = Instance.new("UICorner")
 	detailCorner.CornerRadius = UDim.new(0, 20)
 	detailCorner.Parent = detailPanel
-	
+
 	local detailStroke = Instance.new("UIStroke")
 	detailStroke.Thickness = 3
 	detailStroke.Parent = detailPanel
@@ -312,7 +312,7 @@ local function setupUI()
 	detailName.Font = Enum.Font.GothamBold
 	detailName.TextXAlignment = Enum.TextXAlignment.Center
 	detailName.Parent = detailPanel
-	
+
 	local nameStroke = Instance.new("UIStroke")
 	nameStroke.Thickness = 1.5
 	nameStroke.Color = Color3.new(1, 1, 1)
@@ -326,11 +326,11 @@ local function setupUI()
 	detailIcon.BackgroundColor3 = Color3.fromRGB(255, 200, 0) -- オレンジっぽく
 	detailIcon.ScaleType = Enum.ScaleType.Fit
 	detailIcon.Parent = detailPanel
-	
+
 	local iconCorner = Instance.new("UICorner")
 	iconCorner.CornerRadius = UDim.new(0, 30)
 	iconCorner.Parent = detailIcon
-	
+
 	local iconStroke = Instance.new("UIStroke")
 	iconStroke.Thickness = 3
 	iconStroke.Parent = detailIcon
@@ -405,7 +405,7 @@ local function setupUI()
 	local btnCorner = Instance.new("UICorner")
 	btnCorner.CornerRadius = UDim.new(0, 15)
 	btnCorner.Parent = detailActionButton
-	
+
 	local btnStroke = Instance.new("UIStroke")
 	btnStroke.Thickness = 3
 	btnStroke.Parent = detailActionButton
@@ -420,7 +420,7 @@ local function setupUI()
 		card.BackgroundColor3 = Color3.fromRGB(150, 230, 255)
 		card.Text = ""
 		card.LayoutOrder = i
-		
+
 		-- 振り分け
 		if config.isSpecial then
 			card.Parent = specialSection
@@ -431,7 +431,7 @@ local function setupUI()
 		local cardCorner = Instance.new("UICorner")
 		cardCorner.CornerRadius = UDim.new(0, 15)
 		cardCorner.Parent = card
-		
+
 		local cardStroke = Instance.new("UIStroke")
 		cardStroke.Thickness = 2
 		cardStroke.Parent = card
@@ -444,7 +444,8 @@ local function setupUI()
 		icon.BackgroundTransparency = 1
 		icon.Image = config.imageAssetId or ""
 		icon.ScaleType = Enum.ScaleType.Fit
-		icon.Active = false -- クリックをブロックしないように
+		icon.Active = false
+		-- クリックをブロックしないように
 		icon.Parent = card
 
 		local statusLabel = Instance.new("TextLabel")
@@ -458,7 +459,7 @@ local function setupUI()
 		statusLabel.TextSize = 18
 		statusLabel.Font = Enum.Font.GothamBold
 		statusLabel.Parent = card
-		
+
 		local statusStroke = Instance.new("UIStroke")
 		statusStroke.Thickness = 1.5
 		statusStroke.Color = Color3.new(1, 1, 1)
@@ -469,7 +470,7 @@ local function setupUI()
 			status = statusLabel,
 			config = config
 		}
-		
+
 		-- クリックで選択
 		card.Activated:Connect(function()
 			selectedHammerId = hammerId
@@ -478,7 +479,7 @@ local function setupUI()
 	end
 
 	shopFrame.Enabled = false
-	
+
 	-- 初期選択
 	selectedHammerId = "BASIC"
 end
@@ -500,9 +501,9 @@ updateUI = function()
 		local card = cardData.card
 		local status = cardData.status
 		local config = cardData.config
-		
+
 		status.Text = getStatusText(hammerId, config)
-		
+
 		-- 選択中のハイライト
 		if selectedHammerId == hammerId then
 			card.BackgroundColor3 = Color3.fromRGB(255, 230, 100)
@@ -514,7 +515,7 @@ updateUI = function()
 			card:FindFirstChildWhichIsA("UIStroke").Thickness = 2
 		end
 	end
-	
+
 	-- 詳細パネルの更新
 	if selectedHammerId then
 		local config = HammerShopConfig.Hammers[selectedHammerId]
@@ -523,10 +524,10 @@ updateUI = function()
 		-- 画像と名前を更新
 		detailIcon.Image = config.imageAssetId or ""
 		detailName.Text = config.displayName or selectedHammerId
-		
+
 		-- ステータスを更新 (最新スペック)
 		detailDamage.Text = string.format("⚡ ダメージ: x%.1f", config.damageMultiplier or 1.0)
-		
+
 		-- 能力名 (Configから取得。同期不具合対策としてController側にも定義)
 		local desc = config.description
 		if not desc or desc == "" or desc == "なし" then
@@ -541,7 +542,7 @@ updateUI = function()
 
 		-- 破壊制限
 		local limitLevel = GameConfig.HammerCanLimit[selectedHammerId] or 1
-		
+
 		-- 潰せる缶の色リストを作成
 		local canColors = {}
 		if limitLevel >= 1 then table.insert(canColors, "赤") end
@@ -549,14 +550,14 @@ updateUI = function()
 		if limitLevel >= 3 then table.insert(canColors, "緑") end
 		if limitLevel >= 4 then table.insert(canColors, "紫") end
 		if limitLevel >= 5 then table.insert(canColors, "黄") end
-		
+
 		local colorList = table.concat(canColors, ", ")
 		detailLimit.Text = "🎯 潰せる缶: " .. colorList
-		
+
 		-- ボタンと価格の更新
 		local owned = table.find(playerData.owned, selectedHammerId) ~= nil
 		local equipped = (playerData.equipped == selectedHammerId)
-		
+
 		if equipped then
 			detailActionButton.Text = "装備済み"
 			detailActionButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
@@ -568,12 +569,12 @@ updateUI = function()
 		else
 			-- 未所有：購入
 			detailPriceLabel.Visible = true
-			
+
 			if config.isSpecial then
 				-- 特殊ハンマーは価格表示ではなくLOCKED案内
 				detailPriceLabel.Text = "COMMUNITY限定"
 				detailPriceLabel.TextColor3 = Color3.fromRGB(200, 50, 50) -- 赤
-				
+
 				detailActionButton.Text = "LOCKED"
 				detailActionButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
 			else
@@ -584,7 +585,7 @@ updateUI = function()
 				end
 				detailPriceLabel.Text = string.format("💰 %s", costText)
 				detailPriceLabel.TextColor3 = Color3.fromRGB(20, 150, 20) -- 緑
-				
+
 				if playerData.scrap >= config.cost then
 					detailActionButton.Text = "購入"
 					detailActionButton.BackgroundColor3 = Color3.fromRGB(0, 200, 50) -- 緑
@@ -621,7 +622,7 @@ local function openShop()
 		playerData.owned = (type(data.owned) == "table") and data.owned or {}
 		playerData.equipped = data.equipped or "BASIC"
 		playerData.scrap = tonumber(data.scrap) or 0
-		
+
 		-- 現在装備しているハンマーを選択状態にする
 		selectedHammerId = playerData.equipped
 		updateUI()
@@ -647,7 +648,7 @@ local function setupButtons()
 		detailActionButton.Activated:Connect(function()
 			print("[HammerShop] Action button clicked, selectedHammerId:", selectedHammerId)
 			if not selectedHammerId then return end
-			
+
 			local owned = table.find(playerData.owned, selectedHammerId) ~= nil
 			local equipped = playerData.equipped == selectedHammerId
 			print("[HammerShop] owned:", owned, "equipped:", equipped)
@@ -701,7 +702,7 @@ end
 local function bindWorldTrigger()
 	-- ワールドの読み込みを待つ（ゲームクライアントでは時間がかかる場合がある）
 	task.wait(2)
-	
+
 	local ok, worldShop = pcall(function()
 		return workspace:WaitForChild("shop", 30)  -- 30秒待機
 	end)
@@ -731,13 +732,13 @@ local function bindWorldTrigger()
 	prompt.Triggered:Connect(function(p)
 		if p ~= player then return end
 		print("[HammerShop] Trigger activated by", player.Name)
-		
-		-- UIが準備できているか確認
+
+		-- UIが準備できいているか確認
 		if not shopFrame then
 			warn("[HammerShop] ShopFrame not ready yet")
 			return
 		end
-		
+
 		openShop()
 	end)
 

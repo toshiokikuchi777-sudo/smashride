@@ -1,73 +1,85 @@
--- MoneyVFX.lua
--- お金・報酬関連のVFX演出（独立版）
-
+-- ReplicatedStorage/Client/VFX/MoneyVFX.lua
 local MoneyVFX = {}
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 
-local COIN_COLLECT_SOUND_ID = "rbxassetid://1210852193" -- コイン取得音
+local COLORS = {
+	COMMON = Color3.fromRGB(255, 255, 255),
+	RARE = Color3.fromRGB(85, 170, 255),
+	EPIC = Color3.fromRGB(170, 85, 255),
+	LEGENDARY = Color3.fromRGB(255, 170, 0)
+}
 
--- 内部ユーティリティ（CanVFXのものと重複するが、疎結合を優先）
-local function createNeonPart(size, cframe, color, shape)
+function MoneyVFX.PlayPop(position, amount, rarity)
+	local bg = Instance.new("BillboardGui")
+	bg.Size = UDim2.fromScale(4, 1.5)
+	bg.StudsOffset = Vector3.new(0, 2, 0)
+	bg.Parent = workspace
+	
+	local part = Instance.new("Part")
+	part.Size = Vector3.new(0.1, 0.1, 0.1)
+	part.Transparency = 1
+	part.Anchored = true
+	part.CanCollide = false
+	part.Position = position
+	part.Parent = workspace
+	bg.Adornee = part
+	Debris:AddItem(part, 2)
+
+	local txt = Instance.new("TextLabel")
+	txt.Size = UDim2.fromScale(1, 1)
+	txt.BackgroundTransparency = 1
+	txt.Text = "+" .. tostring(amount)
+	txt.TextColor3 = COLORS[rarity] or Color3.new(1,1,1)
+	txt.Font = Enum.Font.FredokaOne
+	txt.TextScaled = true
+	txt.Parent = bg
+
+	TweenService:Create(bg, TweenInfo.new(1, Enum.EasingStyle.Quart), {StudsOffset = Vector3.new(0, 5, 0)}):Play()
+	TweenService:Create(txt, TweenInfo.new(1), {TextTransparency = 1}):Play()
+	Debris:AddItem(bg, 1.1)
+end
+
+local COIN_SOUND_ID = "rbxassetid://99023919906775"
+local lastSoundTime = 0
+local SOUND_COOLDOWN = 0.08 -- 音が重なりすぎないように制限
+
+-- コイン収集エフェクト (CanControllerから呼ばれる)
+function MoneyVFX.PlayCollectionEffect(position)
+	if not position then return end
+	
+	-- 効果音の再生 (クールダウン制御)
+	local now = tick()
+	if now - lastSoundTime > SOUND_COOLDOWN then
+		lastSoundTime = now
+		local sound = Instance.new("Sound")
+		sound.SoundId = COIN_SOUND_ID
+		sound.Volume = 0.45
+		sound.Pitch = 1.0 + (math.random(-10, 10) / 100) -- 少しピッチを揺らして自然に
+		sound.Parent = workspace
+		sound:Play()
+		Debris:AddItem(sound, 1.5)
+	end
+
+	-- 簡易的なビジュアル演出 (小さな閃光)
 	local p = Instance.new("Part")
-	p.Name = "VFX_Part"
+	p.Size = Vector3.new(1.5, 1.5, 1.5)
+	p.Transparency = 0.4
+	p.Color = Color3.fromRGB(255, 255, 100)
+	p.Material = Enum.Material.Neon
 	p.Anchored = true
 	p.CanCollide = false
-	p.CanTouch = false
-	p.CanQuery = false
-	p.CastShadow = false
-	p.Material = Enum.Material.Neon
-	p.Color = color
-	p.Size = size
-	p.CFrame = cframe
-	p.Shape = shape or Enum.PartType.Ball
+	p.Position = position
+	p.Shape = Enum.PartType.Ball
 	p.Parent = workspace
-	return p
-end
-
-local function tweenOut(inst, tweenInfo, props)
-	local tw = TweenService:Create(inst, tweenInfo, props)
-	tw:Play()
-	Debris:AddItem(inst, tweenInfo.Time + 0.1)
-end
-
--- コイン取得時のエフェクトとサウンド
-function MoneyVFX.PlayCollectionEffect(worldPos)
-	if not worldPos then return end
-
-	-- 1. サウンド再生
-	local sound = Instance.new("Sound")
-	sound.SoundId = COIN_COLLECT_SOUND_ID
-	sound.Volume = 0.6
-	sound.Parent = workspace
 	
-	-- サウンド再生を非同期で実行（ロードを待たずにUI等を進める）
-	task.spawn(function()
-		if not sound.IsLoaded then
-			sound.Loaded:Wait()
-		end
-		sound:Play()
-		sound.Ended:Wait()
-		sound:Destroy()
-	end)
-	
-	-- 念のため最大2秒後に削除
-	Debris:AddItem(sound, 2)
-
-	-- 2. 視覚演出（光のポップ）
-	local flash = createNeonPart(
-		Vector3.new(0.5, 0.5, 0.5), 
-		CFrame.new(worldPos), 
-		Color3.new(1, 1, 0.8), 
-		Enum.PartType.Ball
-	)
-	flash.Transparency = 0.2
-	
-	tweenOut(flash, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+	TweenService:Create(p, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
 		Size = Vector3.new(4, 4, 4),
 		Transparency = 1
-	})
+	}):Play()
+	Debris:AddItem(p, 0.5)
 end
 
 return MoneyVFX

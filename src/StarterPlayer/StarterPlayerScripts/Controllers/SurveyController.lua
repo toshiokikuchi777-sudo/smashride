@@ -31,11 +31,11 @@ local function createRoundedFrame(name, parent, size, pos, color, radius)
 	frame.Position = pos or UDim2.new(0, 0, 0, 0)
 	frame.BackgroundColor3 = color or Color3.new(1, 1, 1)
 	frame.Parent = parent
-	
+
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = radius or UDim.new(0, 12)
 	corner.Parent = frame
-	
+
 	return frame
 end
 
@@ -58,19 +58,19 @@ end
 ----------------------------------------------------------------
 function SurveyController.Init()
 	print("[SurveyController] Init")
-	
+
 	-- すでに存在すれば削除
 	if playerGui:FindFirstChild("SurveyGui") then
 		playerGui.SurveyGui:Destroy()
 	end
-	
+
 	surveyGui = Instance.new("ScreenGui")
 	surveyGui.Name = "SurveyGui"
 	surveyGui.ResetOnSpawn = false
 	surveyGui.Enabled = true
 	surveyGui.DisplayOrder = 100 -- 高い優先度
 	surveyGui.Parent = playerGui
-	
+
 	-- 1. オープンボタン (右上)
 	-- スマホでも押しやすいよう、最低サイズ（Pixel）を保ちつつScaleで配置
 	openButton = Instance.new("TextButton")
@@ -82,7 +82,7 @@ function SurveyController.Init()
 	openButton.Text = "💬"
 	openButton.TextSize = 25
 	openButton.Parent = surveyGui
-	
+
 	-- 小さい画面（スマホ等）ではボタンを少し大きく、大きい画面では適切なサイズに
 	local btnConstraint = Instance.new("UISizeConstraint")
 	btnConstraint.MinSize = Vector2.new(45, 45)
@@ -93,7 +93,7 @@ function SurveyController.Init()
 	local bStroke = Instance.new("UIStroke", openButton)
 	bStroke.Thickness = 2
 	bStroke.Color = Color3.new(1, 1, 1)
-	
+
 	-- 2. オーバーレイ
 	overlay = Instance.new("Frame")
 	overlay.Name = "Overlay"
@@ -103,12 +103,12 @@ function SurveyController.Init()
 	overlay.Active = true
 	overlay.Visible = false
 	overlay.Parent = surveyGui
-	
+
 	-- 3. メインフォーム (Scaleベースに変更)
 	-- 幅80%、高さ70%を目指しつつ、UISizeConstraintで制限
 	formFrame = createRoundedFrame("FormFrame", overlay, UDim2.new(0.8, 0, 0.7, 0), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(250, 250, 250), UDim.new(0, 20))
 	formFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	
+
 	-- サイズ制限 (PCだと大きすぎず、スマホだと小さすぎないように)
 	local sizeConstraint = Instance.new("UISizeConstraint")
 	sizeConstraint.MinSize = Vector2.new(300, 400)
@@ -116,7 +116,7 @@ function SurveyController.Init()
 	sizeConstraint.Parent = formFrame
 
 	local title = createStyledText("アンケート", formFrame, UDim2.new(1, 0, 0, 50), UDim2.new(0, 0, 0, 10), 24)
-	
+
 	-- コンテンツコンテナ
 	local content = Instance.new("ScrollingFrame")
 	content.Size = UDim2.new(1, -40, 1, -120)
@@ -126,7 +126,7 @@ function SurveyController.Init()
 	content.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
 	content.CanvasSize = UDim2.new(0, 0, 0, 520)
 	content.Parent = formFrame
-	
+
 	local layout = Instance.new("UIListLayout")
 	layout.Padding = UDim.new(0, 15)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -137,21 +137,21 @@ function SurveyController.Init()
 	funGroup.Size = UDim2.new(1, 0, 0, 70)
 	funGroup.BackgroundTransparency = 1
 	funGroup.Parent = content
-	
+
 	createStyledText("楽しさは？ (1-5)", funGroup, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0), 18, Enum.TextXAlignment.Left)
-	
+
 	local funButtons = Instance.new("Frame")
 	funButtons.Size = UDim2.new(1, 0, 0, 40)
 	funButtons.Position = UDim2.new(0, 0, 0, 30)
 	funButtons.BackgroundTransparency = 1
 	funButtons.Parent = funGroup
-	
+
 	local funLayout = Instance.new("UIListLayout")
 	funLayout.FillDirection = Enum.FillDirection.Horizontal
 	funLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	funLayout.Padding = UDim.new(0, 10)
 	funLayout.Parent = funButtons
-	
+
 	local starButtons = {}
 	for i = 1, 5 do
 		local btn = Instance.new("TextButton")
@@ -162,7 +162,7 @@ function SurveyController.Init()
 		btn.TextSize = 18
 		btn.Parent = funButtons
 		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-		
+
 		btn.Activated:Connect(function()
 			currentAnswers.fun = i
 			for j, b in ipairs(starButtons) do
@@ -171,27 +171,27 @@ function SurveyController.Init()
 		end)
 		table.insert(starButtons, btn)
 	end
-	
+
 	-- Q2: Difficulty (Easy / Normal / Hard)
 	local function createRadioGroup(titleText, options, key)
 		local group = Instance.new("Frame")
 		group.Size = UDim2.new(1, 0, 0, 70)
 		group.BackgroundTransparency = 1
 		group.Parent = content
-		
+
 		createStyledText(titleText, group, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0), 18, Enum.TextXAlignment.Left)
-		
+
 		local optsFrame = Instance.new("Frame")
 		optsFrame.Size = UDim2.new(1, 0, 0, 35)
 		optsFrame.Position = UDim2.new(0, 0, 0, 30)
 		optsFrame.BackgroundTransparency = 1
 		optsFrame.Parent = group
-		
+
 		local hLayout = Instance.new("UIListLayout")
 		hLayout.FillDirection = Enum.FillDirection.Horizontal
 		hLayout.Padding = UDim.new(0, 5)
 		hLayout.Parent = optsFrame
-		
+
 		local buttons = {}
 		local numOptions = #options
 		for _, opt in ipairs(options) do
@@ -203,7 +203,7 @@ function SurveyController.Init()
 			btn.TextSize = 14
 			btn.Parent = optsFrame
 			Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-			
+
 			-- テキストがはみ出さないように調整
 			local textConstraint = Instance.new("UITextSizeConstraint")
 			textConstraint.MaxTextSize = 14
@@ -221,26 +221,26 @@ function SurveyController.Init()
 			table.insert(buttons, btn)
 		end
 	end
-	
+
 	createRadioGroup("難易度は？", {
 		{label = "かんたん", value = "Easy"},
 		{label = "ちょうどいい", value = "JustRight"},
 		{label = "むずかしい", value = "Hard"}
 	}, "difficulty")
-	
+
 	createRadioGroup("またやりたい？", {
 		{label = "はい", value = "Yes"},
 		{label = "いいえ", value = "No"}
 	}, "replay")
-	
+
 	-- Q4: Comment
 	local commentGroup = Instance.new("Frame")
 	commentGroup.Size = UDim2.new(1, 0, 0, 100)
 	commentGroup.BackgroundTransparency = 1
 	commentGroup.Parent = content
-	
+
 	createStyledText("コメント (任意)", commentGroup, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 0, 0), 18, Enum.TextXAlignment.Left)
-	
+
 	local textBox = Instance.new("TextBox")
 	textBox.Size = UDim2.new(1, 0, 0, 70)
 	textBox.Position = UDim2.new(0, 0, 0, 30)
@@ -254,22 +254,22 @@ function SurveyController.Init()
 	textBox.ClearTextOnFocus = false
 	textBox.Parent = commentGroup
 	Instance.new("UICorner", textBox).CornerRadius = UDim.new(0, 8)
-	
+
 	textBox:GetPropertyChangedSignal("Text"):Connect(function()
 		currentAnswers.comment = textBox.Text
 	end)
-	
+
 	-- 下部ボタン (スクロール内へ移動)
 	local submitBtn = createRoundedFrame("SubmitButton", content, UDim2.new(1, 0, 0, 45), nil, Color3.fromRGB(46, 204, 113))
 	local submitLabel = createStyledText("送信する", submitBtn, UDim2.new(1, 0, 1, 0))
 	submitLabel.TextColor3 = Color3.new(1, 1, 1)
-	
+
 	local submitTrigger = Instance.new("TextButton")
 	submitTrigger.Size = UDim2.new(1, 0, 1, 0)
 	submitTrigger.BackgroundTransparency = 1
 	submitTrigger.Text = ""
 	submitTrigger.Parent = submitBtn
-	
+
 	-- 閉じるボタン
 	local closeIcon = Instance.new("TextButton")
 	closeIcon.Name = "CloseIcon"
@@ -299,15 +299,15 @@ function SurveyController.Init()
 			overlay.Visible = false
 		end
 	end
-	
+
 	openButton.Activated:Connect(function()
 		toggleForm(true)
 	end)
-	
+
 	closeIcon.Activated:Connect(function()
 		toggleForm(false)
 	end)
-	
+
 	submitTrigger.Activated:Connect(function()
 		-- バリデーション
 		if currentAnswers.fun == 0 or currentAnswers.difficulty == "" or currentAnswers.replay == "" then
@@ -318,17 +318,17 @@ function SurveyController.Init()
 			submitBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
 			return
 		end
-		
+
 		submitLabel.Text = "送信中..."
 		submitTrigger.Active = false
-		
+
 		SubmitSurveyEvent:FireServer(currentAnswers)
-		
+
 		task.wait(1)
 		submitLabel.Text = "送信完了！"
 		task.wait(1)
 		toggleForm(false)
-		
+
 		-- リセット
 		currentAnswers = {fun = 0, difficulty = "", replay = "", comment = ""}
 		textBox.Text = ""

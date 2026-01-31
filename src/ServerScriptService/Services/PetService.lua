@@ -280,7 +280,7 @@ function PetService.SetEquippedPet(player, slotIndex, petIdOrEmpty, skipRecalc)
 		local hammerMult = player:GetAttribute("HammerMult") or 1.0
 		local Net = require(ReplicatedStorage.Shared.Net)
 		local payload = ES.BuildPayload(data, hammerMult, petBonusMult)
-		Net.E("EffectStateSync"):FireClient(player, payload)
+		Net.E(Constants.Events.EffectStateSync):FireClient(player, payload)
 		print("[PetService/EffectSync] Sync sent rev:", data.effectRev, "pm:", petBonusMult)
 	end
 
@@ -321,7 +321,7 @@ function PetService.EquipPets(player, petIdsTable)
 		local hammerMult = player:GetAttribute("HammerMult") or 1.0
 		local Net = require(ReplicatedStorage.Shared.Net)
 		local payload = ES.BuildPayload(data, hammerMult, petBonusMult)
-		Net.E("EffectStateSync"):FireClient(player, payload)
+		Net.E(Constants.Events.EffectStateSync):FireClient(player, payload)
 		print("[PetService/EffectSync] Bulk Sync sent rev:", data.effectRev, "pm:", petBonusMult)
 	end
 end
@@ -375,7 +375,7 @@ end
 ----------------------------------------------------------------
 function PetService.SendSync(player)
     print("[PetService] Sending Sync to", player.Name)
-    Net.E("PetInventorySync"):FireClient(player, {
+    Net.E(Constants.Events.PetInventorySync):FireClient(player, {
         ownedPets = PetService.GetOwnedPets(player),
         equippedPets = PetService.GetEquippedPets(player)
     })
@@ -386,7 +386,7 @@ end
 ----------------------------------------------------------------
 local function setupRemotes()
     -- 1. Request Inventory
-    Net.F("RequestPetInventory").OnServerInvoke = function(player)
+    Net.F(Constants.Functions.RequestPetInventory).OnServerInvoke = function(player)
         return {
             ownedPets = PetService.GetOwnedPets(player),
             equippedPets = PetService.GetEquippedPets(player)
@@ -394,7 +394,7 @@ local function setupRemotes()
     end
 
     -- 2. Request Equip
-    Net.On("RequestEquipPet", function(player, slotIndex, petIdOrEmpty)
+    Net.On(Constants.Events.RequestEquipPet, function(player, slotIndex, petIdOrEmpty)
         print("[PetService] Remote RequestEquipPet:", player.Name, slotIndex, petIdOrEmpty)
         local ok = PetService.SetEquippedPet(player, slotIndex, petIdOrEmpty)
         if ok then

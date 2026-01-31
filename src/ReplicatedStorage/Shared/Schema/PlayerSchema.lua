@@ -62,38 +62,18 @@ function PlayerSchema.Normalize(raw)
     -- ハンマーショップ用
     ownedHammers = ensureArray(raw.ownedHammers),
     equippedHammer = (type(raw.equippedHammer) == "string") and raw.equippedHammer or "NONE",
-    
-    -- カラー別破壊数
+
+    -- 実績・イベント
+    hasClaimedFeedback = raw.hasClaimedFeedback == true,
+    claimedRainbowHammer = raw.claimedRainbowHammer == true,
+
+    -- 集計用（各色の破壊数など）
     smashedCounts = (type(raw.smashedCounts) == "table") and raw.smashedCounts or {
       red = 0, blue = 0, green = 0, purple = 0, yellow = 0
-    },
-
-    -- 前回の指示書で追加した revision も維持
-    effectRev = ensureNumber(raw.effectRev, 0),
-    _version = ensureNumber(raw._version, 1),
-
-    -- プロモーション報酬
-    hasClaimedFeedback = (raw.hasClaimedFeedback == true),
-    claimedRainbowHammer = (raw.claimedRainbowHammer == true)
+    }
   }
-  
-  -- SmashedCounts のキー補完 (万一 missing があれば)
-  for _, col in ipairs({"red", "blue", "green", "purple", "yellow"}) do
-    if data.smashedCounts[col] == nil then data.smashedCounts[col] = 0 end
-  end
 
-  -- equippedPets は必ず3スロットにする
-  local eq = data.equippedPets
-  local cleanedEq = { "", "", "" }
-  for i = 1, 3 do
-    cleanedEq[i] = (type(eq[i]) == "string") and eq[i] or ""
-  end
-  data.equippedPets = cleanedEq
-
-  -- cansSmashedTotal は負数禁止
-  if data.cansSmashedTotal < 0 then data.cansSmashedTotal = 0 end
-  
-  -- スターターペットの保証（最低限의 플레이아비리티）
+  -- ペットの初期保証 (スターターペットを持っていない場合は付与)
   local hasStarter = false
   for _, petId in ipairs(data.ownedPets) do
     if petId == "Pet_Starter" then hasStarter = true break end

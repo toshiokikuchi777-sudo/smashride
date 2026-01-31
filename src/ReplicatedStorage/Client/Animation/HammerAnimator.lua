@@ -32,68 +32,34 @@ local function getHitAnim()
 	return folder and folder:FindFirstChild("HammerHit")
 end
 
-local function ensureAnimator()
-	if not humanoid then return nil end
-	animator = humanoid:FindFirstChildOfClass("Animator") or humanoid:WaitForChild("Animator", 3)
-	return animator
-end
-
 local function ensureTrack()
-	if not humanoid then return nil end
-	if not ensureAnimator() then return nil end
-
+	if not animator then return nil end
+	if hitTrack and hitTrack.Parent == animator then return hitTrack end
+	
 	local anim = getHitAnim()
 	if not anim then return nil end
-
-	if not hitTrack then
-		hitTrack = humanoid:LoadAnimation(anim)
-		hitTrack.Priority = Enum.AnimationPriority.Action4
-	end
-
-	local ok = pcall(function()
-		local _ = hitTrack.Length
-	end)
-	if not ok or hitTrack.Length == 0 then
-		hitTrack = humanoid:LoadAnimation(anim)
-		hitTrack.Priority = Enum.AnimationPriority.Action4
-	end
-
+	
+	hitTrack = animator:LoadAnimation(anim)
+	hitTrack.Priority = Enum.AnimationPriority.Action
 	return hitTrack
 end
 
 local function refreshHammerRefs()
 	if not character then return end
-
-	hammerModel = character:FindFirstChild("HammerVisual")
-	if hammerModel then
-		hammerHandle = hammerModel:FindFirstChild("Handle") or hammerModel:FindFirstChildWhichIsA("BasePart", true)
-	else
-		-- [Robust Fallback] Search all children for something that looks like a hammer
-		for _, item in ipairs(character:GetChildren()) do
-			if item:IsA("Accessory") or item:IsA("Model") then
-				local h = item:FindFirstChild("Handle")
-				if h then
-					hammerHandle = h
-					hammerModel = item
-					break
-				end
-			end
-		end
-	end
-
-	local rightHand = character:FindFirstChild("RightHand") or character:FindFirstChild("Right Arm")
-	if rightHand then
-		hammerMotor = rightHand:FindFirstChild("HammerMotor")
+	
+	local visual = character:FindFirstChild("HammerVisual", true)
+	if visual then
+		hammerModel = visual
+		hammerHandle = visual:FindFirstChild("Handle")
+		hammerMotor = visual:FindFirstChild("HammerMotor", true)
 	end
 end
 
-local function setupCharacter(char : Model)
+local function setupCharacter(char)
 	character = char
-	humanoid = char:WaitForChild("Humanoid", 10)
-	if not humanoid then return end
+	humanoid = char:WaitForChild("Humanoid")
+	animator = humanoid:WaitForChild("Animator")
 
-	ensureAnimator()
-	ensureTrack()
 	refreshHammerRefs()
 
 	table.insert(conns, char.ChildAdded:Connect(function(c)

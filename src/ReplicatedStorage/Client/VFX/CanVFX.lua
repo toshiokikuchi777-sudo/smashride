@@ -370,7 +370,7 @@ function CanVFX.PlayReasonVFX(canModel, reason, color)
 	if last and tick() - last < LOCK_COOLDOWN then return end
 	lockCache[canModel] = tick()
 
-	-- Sound 生生成
+	-- Sound 生成
 	local sound = Instance.new("Sound")
 	sound.SoundId = LOCK_SOUND_ID
 	sound.Volume = 0.5

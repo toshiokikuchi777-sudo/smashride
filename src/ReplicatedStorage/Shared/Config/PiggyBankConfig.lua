@@ -16,7 +16,7 @@ PiggyBankConfig.TargetTypes = {
 	}
 }
 
--- 属性名 (互換性のためにFaceTargetと共通)
+-- 属性名 (互換性のためにFaceTarget hedge 共通)
 PiggyBankConfig.AttrHP = "FaceHP"
 PiggyBankConfig.AttrMaxHP = "FaceMaxHP"
 PiggyBankConfig.AttrTargetId = "FaceTargetId"

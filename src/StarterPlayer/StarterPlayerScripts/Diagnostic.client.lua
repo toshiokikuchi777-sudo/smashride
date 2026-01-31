@@ -16,12 +16,12 @@ task.spawn(function()
         task.wait(2.0)
         local hud = PlayerGui:FindFirstChild("MainHud")
         if hud then
-            -- Force Buttons to Top
+            -- Force Buttons to Top (Carefully)
             for _, obj in ipairs(hud:GetDescendants()) do
                 if obj:IsA("TextButton") or obj:IsA("ImageButton") then
-                    if obj.ZIndex < 100 then
-                        obj.ZIndex = 100
-                        print("[Diagnostic] Bumped ZIndex for:", obj.Name)
+                    if obj.ZIndex < 10 then
+                        obj.ZIndex = 10 -- Too high (100) might break some layouts, 10 is enough
+                        -- print("[Diagnostic] Bumped ZIndex for:", obj.Name)
                     end
                 end
             end

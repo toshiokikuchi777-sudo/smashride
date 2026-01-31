@@ -15,23 +15,23 @@ local ScoreMath  = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild
 local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 
 -- Remote Events (Unified via Net)
-local RE_ScoreChanged = Net.E("ScoreChanged")
-local RE_ScrapChanged = Net.E("ScrapChanged")
-local RE_CansSmashed = Net.E("CansSmashed")
-local RE_UnlockStateSync = Net.E("UnlockStateSync")
-local RE_CrushCanVisual = Net.E("CrushCanVisual")
-local RE_StageUp = Net.E("StageUp")
-local RE_MultiplierVFX = Net.E("MultiplierVFX")
-local RE_ShockwaveVFX = Net.E("ShockwaveVFX")
-local RE_EffectStateSync = Net.E("EffectStateSync")
-local RE_EquipHammerRequest = Net.E("EquipHammerRequest")
-local RE_StageSync = Net.E("StageSync")
-local RE_CanLocked = Net.E("CanLocked")
+local RE_ScoreChanged = Net.E(Constants.Events.ScoreChanged)
+local RE_ScrapChanged = Net.E(Constants.Events.ScrapChanged)
+local RE_CansSmashed = Net.E(Constants.Events.CansSmashed)
+local RE_UnlockStateSync = Net.E(Constants.Events.UnlockStateSync)
+local RE_CrushCanVisual = Net.E(Constants.Events.CrushCanVisual)
+local RE_StageUp = Net.E(Constants.Events.StageUp)
+local RE_MultiplierVFX = Net.E(Constants.Events.MultiplierVFX)
+local RE_ShockwaveVFX = Net.E(Constants.Events.ShockwaveVFX)
+local RE_EffectStateSync = Net.E(Constants.Events.EffectStateSync)
+local RE_EquipHammerRequest = Net.E(Constants.Events.EquipHammerRequest)
+local RE_StageSync = Net.E(Constants.Events.StageSync)
+local RE_CanLocked = Net.E(Constants.Events.CanLocked)
 
 -- Legacy Remotes
-local CanCrushedEvent = Net.E("CanCrushed")
-local SetEquippedHammer = Net.E("SetEquippedHammer")
-local RE_CanCrushResult = Net.E("CanCrushResult")
+local CanCrushedEvent = Net.E(Constants.Events.CanCrushed)
+local SetEquippedHammer = Net.E(Constants.Events.SetEquippedHammer)
+local RE_CanCrushResult = Net.E(Constants.Events.CanCrushResult)
 
 local function replyCrushResult(player, canModel, ok, reason)
 	if not player then return end
@@ -64,6 +64,31 @@ local hitHistory = {}  -- [player] = {tick1, tick2, ...}
 
 -- 前方宣言
 local doShockwave
+function CanService.CheckAndTriggerShockwave(player, position)
+	local hammerType = player:GetAttribute("EquippedHammer") or "NONE"
+	local hammerConfig = GameConfig.Hammers[hammerType]
+
+	if not hammerConfig then return end
+
+	local ability = hammerConfig.ability
+	local radius = hammerConfig.radius or 15
+	local cooldown = hammerConfig.cooldown or 5
+
+	if ability == "SMALL_SHOCKWAVE" then
+		radius = 8
+		cooldown = 3
+	end
+
+	if ability == "SHOCKWAVE" or ability == "HYBRID" or hammerType == "MASTER" or ability == "SMALL_SHOCKWAVE" then
+		local lastUse = shockwaveCooldowns[player] or 0
+		if (tick() - lastUse) >= cooldown then
+			shockwaveCooldowns[player] = tick()
+			task.spawn(function()
+				doShockwave(player, position, radius)
+			end)
+		end
+	end
+end
 
 -- テンプレート取得
 local CansTemplate = ServerStorage:FindFirstChild("Templates") and ServerStorage.Templates:FindFirstChild("Cans")
@@ -321,6 +346,18 @@ local function initiateRespawn(canName, crushPivot, player)
 			local rot = CFrame.Angles(0, math.rad(math.random(0, 360)), 0)
 			local spawnPos = crushPivot.Position + Vector3.new(0, 2.0, 0)
 			newCan:PivotTo(CFrame.new(spawnPos) * rot)
+			
+			-- [FIX] 属性と物理状態をリセット
+			newCan:SetAttribute("ServerHandled", nil)
+			newCan:SetAttribute("IsFlattened", nil)
+			for _, p in ipairs(newCan:GetDescendants()) do
+				if p:IsA("BasePart") then
+					p.Transparency = 0
+				elseif p:IsA("SpecialMesh") then
+					-- メッシュのスケールなどもリセットが必要な場合があるが
+					-- サーバー側のテンプレートは基本無傷なはず
+				end
+			end
 
 			local parentFolder = workspace:FindFirstChild("Cans")
 			if parentFolder then
@@ -364,28 +401,14 @@ local function crushCan(canModel, player, isShockwave)
 	initiateRespawn(canName, crushPivot, player)
 
 	if not isShockwave then
-		local hammerType = player:GetAttribute("EquippedHammer") or "NONE"
-		local hammerConfig = GameConfig.Hammers[hammerType]
+		CanService.CheckAndTriggerShockwave(player, crushPivot.Position)
+	end
 
-		if hammerConfig then
-			local ability = hammerConfig.ability
-			local radius = hammerConfig.radius or 15
-			local cooldown = hammerConfig.cooldown or 5
-
-			if ability == "SMALL_SHOCKWAVE" then
-				radius = 8
-				cooldown = 3
-			end
-
-			if ability == "SHOCKWAVE" or ability == "HYBRID" or hammerType == "MASTER" or ability == "SMALL_SHOCKWAVE" then
-				local lastUse = shockwaveCooldowns[player] or 0
-				if (tick() - lastUse) >= cooldown then
-					shockwaveCooldowns[player] = tick()
-					task.spawn(function()
-						doShockwave(player, crushPivot.Position, radius)
-					end)
-				end
-			end
+	-- [FIX] サーバー側で物理干渉を即座に消す
+	for _, part in ipairs(canModel:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.Anchored = true
+			part.CanCollide = false
 		end
 	end
 
@@ -404,7 +427,7 @@ doShockwave = function(player, centerPosition, radius)
 	local cansToCrush = {}
 
 	local params = OverlapParams.new()
-	params.FilterType = Enum.RaycastFilterType.Whitelist
+	params.FilterType = Enum.RaycastFilterType.Include
 	params.FilterDescendantsInstances = { cansFolder }
 
 	local parts = workspace:GetPartBoundsInRadius(centerPosition, radius, params)
@@ -452,8 +475,19 @@ doShockwave = function(player, centerPosition, radius)
 		fireToNearbyPlayers(RE_CrushCanVisual, crushPivot.Position, VFX_CRUSH_RADIUS, can, player)
 		initiateRespawn(canName, crushPivot, player)
 
+		-- サーバー側で物理干渉を即座に消す
+		for _, part in ipairs(can:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+				part.CanCollide = false
+			end
+		end
+
 		task.delay(CRUSH_SHOW_TIME, function()
-			if can.Parent then can:Destroy() end
+			if can and can.Parent then 
+				can:Destroy() 
+				-- print("[CanService] Shockwave destroyed can:", canName)
+			end
 		end)
 	end
 
@@ -482,29 +516,40 @@ doShockwave = function(player, centerPosition, radius)
 end
 
 local function updateHammerVisual(player)
+	print("[CanService] updateHammerVisual called for:", player.Name)
 	local char = player.Character
-	if not char then return end
+	if not char then 
+		warn("[CanService] No character found for:", player.Name)
+		return 
+	end
 
 	local hammerType = player:GetAttribute("EquippedHammer") or "NONE"
+	print("[CanService] Hammer type:", hammerType)
 
 	for _, child in ipairs(char:GetChildren()) do
 		if child.Name == "HammerVisual" or (child:IsA("Accessory") and string.find(child.Name, "Hammer_")) then
 			child:Destroy()
+			print("[CanService] Removed old hammer:", child.Name)
 		end
 	end
 
 	if hammerType == "NONE" or hammerType == "" then
+		print("[CanService] No hammer to equip (NONE)")
 		return
 	end
 
 	local modelsFolder = ReplicatedStorage:FindFirstChild("Models")
+	print("[CanService] Models folder:", modelsFolder ~= nil)
 	local template = modelsFolder and modelsFolder:FindFirstChild("Hammer_" .. hammerType)
+	print("[CanService] Looking for: Hammer_" .. hammerType, "Found:", template ~= nil)
 
 	if template then
 		local hammerModel = template:Clone()
 		hammerModel.Name = "HammerVisual"
+		print("[CanService] Cloned hammer model")
 
 		if hammerModel:IsA("Accessory") then
+			print("[CanService] Converting Accessory to Model")
 			local acc = hammerModel
 			hammerModel = Instance.new("Model")
 			hammerModel.Name = "HammerVisual"
@@ -518,9 +563,33 @@ local function updateHammerVisual(player)
 			acc:Destroy()
 		end
 
-		local handle = hammerModel:FindFirstChild("Handle") or hammerModel:FindFirstChildWhichIsA("BasePart", true)
+		-- より柔軟なHandle検索
+		local handle = hammerModel:FindFirstChild("Handle")
+		if not handle then
+			print("[CanService] 'Handle' not found, searching for any BasePart...")
+			-- モデル直下のBasePart を探す
+			for _, child in ipairs(hammerModel:GetChildren()) do
+				if child:IsA("BasePart") then
+					handle = child
+					print("[CanService] Found BasePart:", child.Name)
+					break
+				end
+			end
+			-- それでも見つからない場合は再帰的に探す
+			if not handle then
+				handle = hammerModel:FindFirstChildWhichIsA("BasePart", true)
+				if handle then
+					print("[CanService] Found BasePart recursively:", handle.Name)
+				end
+			end
+		else
+			print("[CanService] Found 'Handle' part")
+		end
+		
+		print("[CanService] Handle found:", handle ~= nil)
 		if handle then
 			local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+			print("[CanService] RightHand found:", rightHand ~= nil)
 			if rightHand then
 				local oldMotor = rightHand:FindFirstChild("HammerMotor")
 				if oldMotor then oldMotor:Destroy() end
@@ -533,8 +602,15 @@ local function updateHammerVisual(player)
 				motor.Parent = rightHand
 
 				hammerModel.Parent = char
+				print("[CanService] Hammer equipped successfully!")
+			else
+				warn("[CanService] RightHand not found!")
 			end
+		else
+			warn("[CanService] No BasePart found in hammer model!")
 		end
+	else
+		warn("[CanService] Hammer template not found: Hammer_" .. hammerType)
 	end
 end
 
@@ -623,7 +699,14 @@ function CanService.Init()
 		playerCansSmashedCount[player] = nil
 	end)
 
-	-- ★★★ ここが重要：hitPos / hitPart を受け取る ★★★
+	-- クライアントからの初期スコア同期リクエスト
+	local RequestScoreSync = Net.E("RequestScoreSync")
+	RequestScoreSync.OnServerEvent:Connect(function(player)
+		print("[CanService] Score sync requested by:", player.Name)
+		pushScore(player)
+	end)
+
+	-- ★★★ ここが重要:hitPos / hitPart を受け取る ★★★
 	CanCrushedEvent.OnServerEvent:Connect(function(player, canModel, hitPos, hitPart)
 		if not player or not player:IsA("Player") then return end
 
@@ -721,6 +804,11 @@ function CanService.Init()
 			RE_EffectStateSync:FireClient(player, payload)
 		end
 	end)
+end
+
+-- 公開メソッド: ハンマーの視覚化更新
+function CanService.UpdateHammerVisual(player)
+	updateHammerVisual(player)
 end
 
 return CanService

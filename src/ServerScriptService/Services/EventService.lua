@@ -8,13 +8,14 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
 local Net = require(ReplicatedStorage.Shared.Net)
+local Constants = require(ReplicatedStorage.Shared.Config.Constants)
 local EventConfig = require(ReplicatedStorage.Shared.Config.EventConfig)
 local ChestConfig = require(ReplicatedStorage.Shared.Config.ChestConfig)
 
 -- イベント状態
 local eventState = {
-	currentEventId = "RAINBOW_CHEST",
-	nextEventId = "RAINBOW_CHEST", -- 次に発生するイベント
+	currentEventId = "RAINBOW_BONUS",
+	nextEventId = "RAINBOW_BONUS", -- 次に発生するイベント
 	isActive = false,
 	startTime = 0,
 	endTime = 0,
@@ -22,7 +23,7 @@ local eventState = {
 }
 
 -- Remote定義
-Net.E("EventStateSync") -- サーバー → 全員(イベント状態同期)
+Net.E(Constants.Events.EventStateSync) -- サーバー → 全員(イベント状態同期)
 
 -- 初期化
 -- 初期化
@@ -41,7 +42,7 @@ end
 
 -- メインループ
 function EventService.StartMainLoop()
-	local eventQueue = {"RAINBOW_CHEST", "FACE_TARGET_BONUS", "PIGGY_BANK_BONUS"}
+	local eventQueue = {"RAINBOW_BONUS", "FACE_TARGET_BONUS", "PIGGY_BANK_BONUS"}
 	local currentIdx = 1
 	
 	eventState.lastEventEndTime = os.time()
@@ -96,7 +97,7 @@ function EventService.StartEvent(eventId)
 	print("[EventService] イベント開始:", eventId)
 	
 	-- スポーン処理
-	if eventId == "RAINBOW_CHEST" then
+	if eventId == "RAINBOW_BONUS" then
 		EventService.RunRainbowChestSpawn(event)
 	elseif eventId == "FACE_TARGET_BONUS" then
 		EventService.RunFaceTargetSpawn(event)
@@ -122,7 +123,7 @@ end
 function EventService.RunRainbowChestSpawn(event)
 	local ChestService = require(script.Parent.ChestService)
 	task.spawn(function()
-		while eventState.isActive and eventState.currentEventId == "RAINBOW_CHEST" do
+		while eventState.isActive and eventState.currentEventId == "RAINBOW_BONUS" do
 			if math.random() < event.spawnMode.spawnChance then
 				local targetPos = EventService.GetSpawnPosition("Chests", 60)
 				if targetPos then
@@ -246,7 +247,7 @@ function EventService.EndEvent(eventId)
 	eventState.isActive = false
 	eventState.lastEventEndTime = os.time()
 	
-	if eventId == "RAINBOW_CHEST" then
+	if eventId == "RAINBOW_BONUS" then
 		require(script.Parent.ChestService).ClearAllChests()
 	elseif eventId == "FACE_TARGET_BONUS" then
 		require(script.Parent.FaceTargetService).ClearAllTargets()
@@ -259,12 +260,12 @@ end
 
 -- 状態を全員に同期
 function EventService.SyncState(state)
-	Net.Fire("EventStateSync", state)
+	Net.Fire(Constants.Events.EventStateSync, state)
 end
 
 -- 特定のプレイヤーにのみ同期
 function EventService.SyncStateToPlayer(player, state)
-	local remote = Net.E("EventStateSync")
+	local remote = Net.E(Constants.Events.EventStateSync)
 	remote:FireClient(player, state)
 end
 
@@ -278,7 +279,7 @@ function EventService.GetCurrentState()
 			remainingTime = remaining
 		}
 	else
-		local nextId = eventState.nextEventId or "RAINBOW_CHEST"
+		local nextId = eventState.nextEventId or "RAINBOW_BONUS"
 		local timeUntil = EventConfig.GetTimeUntilNextEvent(nextId, eventState.lastEventEndTime)
 		return {
 			eventId = nextId,

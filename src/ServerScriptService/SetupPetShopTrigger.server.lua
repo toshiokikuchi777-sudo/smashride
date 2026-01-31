@@ -60,9 +60,9 @@ local function ensureTrigger(petShop: Instance)
 			prompt.KeyboardKeyCode = PROMPT_KEY
 			prompt.RequiresLineOfSight = false
 			prompt.Parent = trigger
-			print("[SetupPetShopTrigger] ProximityPrompt created on existing Trigger")
+			-- print("[SetupPetShopTrigger] ProximityPrompt created on existing Trigger")
 		else
-			print("[SetupPetShopTrigger] Trigger & ProximityPrompt already exist")
+			-- print("[SetupPetShopTrigger] Trigger & ProximityPrompt already exist")
 		end
 		return
 	end
@@ -97,7 +97,7 @@ local function ensureTrigger(petShop: Instance)
 	prompt.RequiresLineOfSight = false
 	prompt.Parent = trigger
 
-	print("[SetupPetShopTrigger] Trigger & ProximityPrompt created at petShop pivot")
+	-- print("[SetupPetShopTrigger] Trigger & ProximityPrompt created at petShop pivot")
 end
 
 -- 実行

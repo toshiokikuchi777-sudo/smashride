@@ -43,11 +43,11 @@ local updateUI
 
 -- レアリティ別の色設定
 local RARITY_COLORS = {
-    Common    = Color3.fromRGB(150, 150, 150),
-    Uncommon  = Color3.fromRGB(46, 204, 113),
-    Rare      = Color3.fromRGB(52, 152, 219),
-    Epic      = Color3.fromRGB(155, 89, 182),
-    Legendary = Color3.fromRGB(241, 196, 15),
+	Common    = Color3.fromRGB(150, 150, 150),
+	Uncommon  = Color3.fromRGB(46, 204, 113),
+	Rare      = Color3.fromRGB(52, 152, 219),
+	Epic      = Color3.fromRGB(155, 89, 182),
+	Legendary = Color3.fromRGB(241, 196, 15),
 }
 
 ----------------------------------------------------------------
@@ -84,7 +84,7 @@ local function setupUI()
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0.3, 0)
 	corner.Parent = petButton
-	
+
 	local stroke = Instance.new("UIStroke")
 	stroke.Thickness = 2
 	stroke.Color = Color3.new(0, 0, 0)
@@ -106,19 +106,19 @@ local function setupUI()
 	bg.AnchorPoint = Vector2.new(0.5, 0.5)
 	bg.BackgroundColor3 = Color3.fromRGB(160, 230, 50) -- 黄緑テーマ
 	Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 20)
-	
+
 	-- 太い黒枠線
 	local bgStroke = Instance.new("UIStroke", bg)
 	bgStroke.Thickness = 4
 	bgStroke.Color = Color3.fromRGB(0, 0, 0)
 	bgStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	
+
 	-- 内側の白い枠線（アクセント）
 	local innerStroke = Instance.new("UIStroke", bg)
 	innerStroke.Thickness = 1.5
 	innerStroke.Color = Color3.fromRGB(255, 255, 255)
 	innerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	
+
 	local uiScale = Instance.new("UIScale", bg)
 	local function updateUIScale()
 		if not petFrame then return end
@@ -178,7 +178,7 @@ local function setupUI()
 	unequipAllBtn.TextSize = 20
 	Instance.new("UICorner", unequipAllBtn).CornerRadius = UDim.new(0, 15)
 	unequipAllBtn.Activated:Connect(function()
-		for i = 1, 3 do Net.Fire("RequestEquipPet", i, "") end
+		for i = 1, 3 do Net.Fire(Constants.Events.RequestEquipPet, i, "") end
 	end)
 
 	detailPanel = Instance.new("Frame", bg)
@@ -247,7 +247,7 @@ updateUI = function()
 	for _, child in ipairs(scrollFrame:GetChildren()) do
 		if child:IsA("TextButton") then child:Destroy() end
 	end
-	
+
 	local counts = {}
 	for _, pid in ipairs(ownedPets) do counts[pid] = (counts[pid] or 0) + 1 end
 
@@ -272,12 +272,12 @@ updateUI = function()
 			card.BackgroundColor3 = RARITY_COLORS[rarity] or RARITY_COLORS.Common
 			card.Text = ""
 			Instance.new("UICorner", card).CornerRadius = UDim.new(0, 15)
-			
+
 			local viewport = Instance.new("ViewportFrame", card)
 			viewport.Size = UDim2.new(1, 0, 0.75, 0)
 			viewport.Position = UDim2.new(0, 0, 0.15, 0)
 			viewport.BackgroundTransparency = 1
-			
+
 			local Models = ReplicatedStorage:FindFirstChild("Models")
 			local PetModels = Models and Models:FindFirstChild("Pets")
 			local petTemplate = PetModels and PetModels:FindFirstChild(modelId)
@@ -285,11 +285,11 @@ updateUI = function()
 				local camera = Instance.new("Camera")
 				viewport.CurrentCamera = camera
 				camera.Parent = viewport
-				
+
 				local petClone = petTemplate:Clone()
 				petClone:PivotTo(CFrame.new(0, 0, 0))
 				petClone.Parent = viewport
-				
+
 				task.delay(0.01, function()
 					if not petClone or not camera then return end
 					local cf, size = petClone:GetBoundingBox()
@@ -334,7 +334,7 @@ updateUI = function()
 		detailName.Text = PetConfig.GetDisplayName(selectedPetId)
 		detailBonus.Text = string.format("💰 BONUS: +%.1f%%", PetConfig.GetBonus(selectedPetId) * 100)
 		detailRarity.Text = "⭐ RARITY: " .. PetConfig.GetRarity(selectedPetId)
-		
+
 		-- 詳細の3Dモデル表示
 		local detailViewport = detailPanel:FindFirstChild("DetailViewport")
 		if detailViewport then
@@ -343,16 +343,16 @@ updateUI = function()
 			local PetModels = Models and Models:FindFirstChild("Pets")
 			local modelId = PetConfig.GetModelId(selectedPetId)
 			local petTemplate = PetModels and PetModels:FindFirstChild(modelId)
-			
+
 			if petTemplate then
 				local cam = Instance.new("Camera")
 				detailViewport.CurrentCamera = cam
 				cam.Parent = detailViewport
-				
+
 				local petClone = petTemplate:Clone()
 				petClone:PivotTo(CFrame.new(0, 0, 0))
 				petClone.Parent = detailViewport
-				
+
 				task.delay(0.05, function()
 					if not petClone or not cam then return end
 					local cf, size = petClone:GetBoundingBox()
@@ -394,7 +394,7 @@ end
 function PetInventoryController.Init()
 	print("[PetInventoryController] Init v4")
 	setupUI() -- ここでボタンとUIを生成
-	
+
 	-- スロットボタンのクリック登録
 	for i = 1, 3 do
 		local btn = (i == 1) and detailSlot1Button or (i == 2) and detailSlot2Button or detailSlot3Button
@@ -402,7 +402,7 @@ function PetInventoryController.Init()
 			if not selectedPetId or selectedPetId == "" then return end
 			local isEq = (equippedPets[i] == selectedPetId)
 			print("[PetInventory] Equip requested for slot", i, "pet:", selectedPetId)
-			Net.Fire("RequestEquipPet", i, isEq and "" or selectedPetId)
+			Net.Fire(Constants.Events.RequestEquipPet, i, isEq and "" or selectedPetId)
 		end)
 	end
 
@@ -413,7 +413,7 @@ function PetInventoryController.Init()
 			opening = true
 			print("[PetInventory] PetsButton Activated")
 			if not petFrame.Enabled then
-				local data = Net.Invoke("RequestPetInventory")
+				local data = Net.Invoke(Constants.Functions.RequestPetInventory)
 				onSync(data)
 			end
 			petFrame.Enabled = not petFrame.Enabled
@@ -422,8 +422,8 @@ function PetInventoryController.Init()
 	else
 		warn("[PetInventory] PetsButton not found after setupUI!")
 	end
-	
-	Net.On("PetInventorySync", onSync)
+
+	Net.On(Constants.Events.PetInventorySync, onSync)
 end
 
 return PetInventoryController

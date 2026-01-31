@@ -58,53 +58,48 @@ local function ensureTrigger(skateshop: Instance)
 			prompt.HoldDuration = PROMPT_HOLD_DURATION
 			prompt.MaxActivationDistance = PROMPT_MAX_DISTANCE
 			prompt.KeyboardKeyCode = PROMPT_KEY
-			prompt.RequiresLineOfSight = false
 			prompt.Parent = trigger
-			print("[SetupSkateShopTrigger] ProximityPrompt created on existing Trigger")
-		else
-			print("[SetupSkateShopTrigger] Trigger & ProximityPrompt already exist")
 		end
-		return
+		return trigger
 	end
 
-	-- Triggerが無いなら新規作成（skateshop直下に置く）
-	local pivot = getModelPivotCFrame(skateshop)
-	if not pivot then
-		warn("[SetupSkateShopTrigger] skateshop pivot not found. Put any BasePart inside skateshop.")
-		return
-	end
+	-- 新規作成
+	local cf = getModelPivotCFrame(skateshop)
+	if not cf then return nil end
 
-	-- 入口前に置きたい場合：ここでオフセット調整（Z方向に前へ）
-	-- 例：pivot * CFrame.new(0, 0, -8) など。まずは中心に置いてOK。
-	local triggerCF = pivot * CFrame.new(0, 0, 0)
+	local part = Instance.new("Part")
+	part.Name = TRIGGER_NAME
+	part.Size = TRIGGER_SIZE
+	part.CFrame = cf
+	part.Anchored = true
+	part.CanCollide = TRIGGER_CAN_COLLIDE
+	part.Transparency = TRIGGER_TRANSPARENCY
+	part.Parent = skateshop
 
-	trigger = Instance.new("Part")
-	trigger.Name = TRIGGER_NAME
-	trigger.Size = TRIGGER_SIZE
-	trigger.Anchored = true
-	trigger.CanCollide = TRIGGER_CAN_COLLIDE
-	trigger.Transparency = TRIGGER_TRANSPARENCY
-	trigger.CFrame = triggerCF
-	trigger.Parent = skateshop
-
-	-- Prompt
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = PROMPT_ACTION_TEXT
 	prompt.ObjectText = PROMPT_OBJECT_TEXT
 	prompt.HoldDuration = PROMPT_HOLD_DURATION
 	prompt.MaxActivationDistance = PROMPT_MAX_DISTANCE
 	prompt.KeyboardKeyCode = PROMPT_KEY
-	prompt.RequiresLineOfSight = false
-	prompt.Parent = trigger
+	prompt.Parent = part
 
-	print("[SetupSkateShopTrigger] Trigger & ProximityPrompt created at skateshop pivot")
+	return part
 end
 
--- 実行
-local skateshop = findPath(Workspace, SHOP_PATH)
-if not skateshop then
-	warn("[SetupSkateShopTrigger] workspace.shop.skateshop not found. Check hierarchy/path.")
-	return
+local function init()
+	local skateshop = findPath(Workspace, SHOP_PATH)
+	if not skateshop then
+		warn("[SetupSkateShopTrigger] Target not found:", table.concat(SHOP_PATH, "."))
+		return
+	end
+
+	local trigger = ensureTrigger(skateshop)
+	if trigger then
+		-- print("[SetupSkateShopTrigger] Trigger & ProximityPrompt created at skateshop pivot")
+	else
+		warn("[SetupSkateShopTrigger] Failed to create trigger (no basepart/pivot found)")
+	end
 end
 
-ensureTrigger(skateshop)
+init()

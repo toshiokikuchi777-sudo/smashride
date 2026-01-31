@@ -52,7 +52,7 @@ local updateUI
 local function getStatusText(boardId, config)
 	local owned = table.find(playerData.owned, boardId) ~= nil
 	local equipped = (playerData.equipped == boardId) and (playerData.equipped ~= "NONE")
-	
+
 	if equipped then
 		return "装備済み"
 	elseif owned then
@@ -99,7 +99,7 @@ local function setupUI()
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0.3, 0)
 	corner.Parent = shopButton
-	
+
 	local stroke = Instance.new("UIStroke")
 	stroke.Thickness = 2
 	stroke.Color = Color3.new(0, 0, 0)
@@ -128,7 +128,7 @@ local function setupUI()
 	bgStroke.Thickness = 4
 	bgStroke.Color = Color3.fromRGB(0, 0, 0)
 	bgStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	
+
 	-- 内側の白い枠線（アクセント）
 	local innerStroke = Instance.new("UIStroke", bg)
 	innerStroke.Thickness = 1.5
@@ -150,14 +150,14 @@ local function setupUI()
 		local scaleW = math.min(1, screenSize.X / (750 + 40))
 		uiScale.Scale = math.min(scaleH, scaleW)
 	end
-	
+
 	shopFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateUIScale)
 	updateUIScale()
 
 	local bgCorner = Instance.new("UICorner")
 	bgCorner.CornerRadius = UDim.new(0, 20)
 	bgCorner.Parent = bg
-	
+
 	local bgStroke = Instance.new("UIStroke")
 	bgStroke.Thickness = 4
 	bgStroke.Color = Color3.new(1, 1, 1)
@@ -176,7 +176,7 @@ local function setupUI()
 	title.Font = Enum.Font.GothamBold
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.Parent = bg
-	
+
 	local titleStroke = Instance.new("UIStroke")
 	titleStroke.Thickness = 2
 	titleStroke.Parent = title
@@ -197,7 +197,7 @@ local function setupUI()
 	local closeCorner = Instance.new("UICorner")
 	closeCorner.CornerRadius = UDim.new(0, 12)
 	closeCorner.Parent = closeButton
-	
+
 	closeButton.Activated:Connect(function()
 		shopFrame.Enabled = false
 	end)
@@ -234,7 +234,7 @@ local function setupUI()
 	local detailCorner = Instance.new("UICorner")
 	detailCorner.CornerRadius = UDim.new(0, 20)
 	detailCorner.Parent = detailPanel
-	
+
 	local detailStroke = Instance.new("UIStroke")
 	detailStroke.Thickness = 3
 	detailStroke.Parent = detailPanel
@@ -259,7 +259,7 @@ local function setupUI()
 	detailIcon.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
 	detailIcon.ScaleType = Enum.ScaleType.Fit
 	detailIcon.Parent = detailPanel
-	
+
 	local iconCorner = Instance.new("UICorner")
 	iconCorner.CornerRadius = UDim.new(0, 30)
 	iconCorner.Parent = detailIcon
@@ -346,7 +346,7 @@ local function setupUI()
 		local cardCorner = Instance.new("UICorner")
 		cardCorner.CornerRadius = UDim.new(0, 15)
 		cardCorner.Parent = card
-		
+
 		local cardStroke = Instance.new("UIStroke")
 		cardStroke.Thickness = 2
 		cardStroke.Parent = card
@@ -379,7 +379,7 @@ local function setupUI()
 			status = statusLabel,
 			config = config
 		}
-		
+
 		card.Activated:Connect(function()
 			selectedBoardId = boardId
 			updateUI()
@@ -401,9 +401,9 @@ updateUI = function()
 		local card = cardData.card
 		local status = cardData.status
 		local config = cardData.config
-		
+
 		status.Text = getStatusText(boardId, config)
-		
+
 		if selectedBoardId == boardId then
 			card.BackgroundColor3 = Color3.fromRGB(255, 230, 100)
 			card:FindFirstChildWhichIsA("UIStroke").Color = Color3.fromRGB(255, 100, 0)
@@ -414,7 +414,7 @@ updateUI = function()
 			card:FindFirstChildWhichIsA("UIStroke").Thickness = 2
 		end
 	end
-	
+
 	-- 詳細パネルの更新
 	if selectedBoardId then
 		local config = SkateboardShopConfig.Skateboards[selectedBoardId]
@@ -425,10 +425,10 @@ updateUI = function()
 		detailSpeed.Text = string.format("⚡ 速度倍率: x%.1f", config.speedMultiplier or 1.0)
 		detailJump.Text = string.format("🚀 ジャンプ力: +%d", config.jumpPowerBonus or 0)
 		detailAbility.Text = "🕒 特殊能力: " .. (config.description or "なし")
-		
+
 		local owned = table.find(playerData.owned, selectedBoardId) ~= nil
 		local equipped = (playerData.equipped == selectedBoardId)
-		
+
 		if equipped then
 			detailActionButton.Text = "装備済み"
 			detailActionButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
@@ -446,7 +446,7 @@ updateUI = function()
 				costText = string.format("%.1fk", config.cost / 1000)
 			end
 			detailPriceLabel.Text = string.format("💰 %s", costText)
-			
+
 			if playerData.scrap >= config.cost then
 				detailActionButton.Text = "購入"
 				detailActionButton.BackgroundColor3 = Color3.fromRGB(0, 200, 50)
@@ -492,7 +492,7 @@ end
 local function setupButtons()
 	detailActionButton.Activated:Connect(function()
 		if not selectedBoardId then return end
-		
+
 		local owned = table.find(playerData.owned, selectedBoardId) ~= nil
 		local equipped = playerData.equipped == selectedBoardId
 
@@ -547,9 +547,9 @@ end
 -- 初期化
 ----------------------------------------------------------------
 function SkateboardShopController.Init()
-	PurchaseSkateboardFunc = Net.F("PurchaseSkateboard")
-	EquipSkateboardFunc = Net.F("EquipSkateboard")
-	GetSkateboardsFunc = Net.F("GetPlayerSkateboards")
+	PurchaseSkateboardFunc = Net.F(Constants.Functions.PurchaseSkateboard)
+	EquipSkateboardFunc = Net.F(Constants.Functions.EquipSkateboard)
+	GetSkateboardsFunc = Net.F(Constants.Functions.GetPlayerSkateboards)
 
 	setupUI()
 	setupButtons()

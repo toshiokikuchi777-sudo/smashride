@@ -5,141 +5,121 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
+local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("GameConfig"))
 local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
-
-local SetEquippedHammer = Net.E("SetEquippedHammer")
-local EquipHammerRequest = Net.E("EquipHammerRequest")
-local ScoreChanged = Net.E("ScoreChanged")
-local UnlockStateSync = Net.E("UnlockStateSync")
-
-local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("GameConfig"))
-local UnlockText = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("UnlockText"))
 local UIStyle = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("UIStyle"))
 
 local gui = script.Parent
 
 -- [STEP 0] UI References
-local function ensureHammerPanel()
-    local panel = gui:FindFirstChild("HammerPanel")
-    if not panel then
-        warn("[HudController] HammerPanel missing! Creating fallback...")
-        panel = Instance.new("Frame")
-        panel.Name = "HammerPanel"
-        panel.Size = UDim2.new(0.3, 0, 0.5, 0)
-        panel.Position = UDim2.new(0.98, 0, 0.5, 0)
-        panel.AnchorPoint = Vector2.new(1, 0.5)
-        panel.BackgroundTransparency = 0.5
-        panel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        panel.Parent = gui
-        
-        local layout = Instance.new("UIListLayout")
-        layout.Padding = UDim.new(0, 5)
-        layout.Parent = panel
-        
-        Instance.new("UICorner", panel)
-    end
-    return panel
+-- ScoreController が作成する MainHud_Modern を優先し、なければ script.Parent (MainHud) を使用
+local targetGui = gui:WaitForChild("MainHud_Modern", 5) or gui
+local hammerPanel = targetGui:WaitForChild("HammerPanel", 5)
+
+if not hammerPanel then
+	warn("[HudController] HammerPanel not found. Creating a fallback container.")
+	hammerPanel = Instance.new("Frame")
+	hammerPanel.Name = "HammerPanel"
+	hammerPanel.Size = UDim2.new(0.6, 0, 0.1, 0)
+	hammerPanel.Position = UDim2.new(0.2, 0, 0.85, 0)
+	hammerPanel.BackgroundTransparency = 1
+	hammerPanel.Parent = targetGui
 end
 
-local hammerPanel = ensureHammerPanel()
 local statusLabel = hammerPanel:FindFirstChild("StatusLabel")
 if not statusLabel then
-    statusLabel = Instance.new("TextLabel")
-    statusLabel.Name = "StatusLabel"
-    statusLabel.Size = UDim2.new(1, 0, 0, 40)
-    statusLabel.BackgroundTransparency = 1
-    statusLabel.TextColor3 = Color3.new(1, 1, 1)
-    statusLabel.Font = Enum.Font.FredokaOne
-    statusLabel.TextScaled = true
-    statusLabel.Parent = hammerPanel
+	statusLabel = Instance.new("TextLabel")
+	statusLabel.Name = "StatusLabel"
+	statusLabel.Size = UDim2.new(0.3, 0, 1, 0)
+	statusLabel.Position = UDim2.new(0, 0, 0, 0)
+	statusLabel.BackgroundTransparency = 1
+	statusLabel.Font = Enum.Font.FredokaOne
+	statusLabel.TextColor3 = Color3.new(1, 1, 1)
+	statusLabel.TextScaled = true
+	statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+	statusLabel.Parent = hammerPanel
+end
+-- Reparent Buttons
+local buttonNames = {"Button_Basic", "Button_Shockwave", "Button_Multi", "Button_Hybrid", "Button_Master"}
+for _, bName in ipairs(buttonNames) do
+	local btn = gui:FindFirstChild(bName, true)
+	if btn then
+		btn.Parent = hammerPanel
+		print("[HudController] Reparented button to HammerPanel:", bName)
+	end
 end
 
--- Reparent Buttons or Create Fallbacks
-local buttonNames = {
-    BASIC = "Button_Basic",
-    SHOCKWAVE = "Button_Shockwave",
-    MULTI = "Button_Multi",
-    HYBRID = "Button_Hybrid",
-    MASTER = "Button_Master"
-}
-
-for hammerId, bName in pairs(buttonNames) do
-    local btn = gui:FindFirstChild(bName, true)
-    if not btn then
-        warn("[HudController] Creating fallback button for:", hammerId)
-        btn = Instance.new("TextButton")
-        btn.Name = bName
-        btn.Size = UDim2.new(1, 0, 0, 35)
-        btn.Text = hammerId
-        btn.Parent = hammerPanel
-        Instance.new("UICorner", btn)
-    elseif btn.Parent ~= hammerPanel then
-        btn.Parent = hammerPanel
-    end
+-- Add layout to HammerPanel if it's our fallback
+if not hammerPanel:FindFirstChildOfClass("UIListLayout") then
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.Padding = UDim.new(0, 10)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = hammerPanel
 end
 
 -- Find Gacha/Pets
 local gachaPanel = gui:WaitForChild("GachaPanel", 5)
 if gachaPanel then
-    local petsButton = gachaPanel:FindFirstChild("PetsButton")
-    if petsButton then
-        print("[HudController] Found Pets button")
-    end
+	local petsButton = gachaPanel:FindFirstChild("PetsButton")
+	if petsButton then
+		print("[HudController] Found Pets button")
+	end
 end
 
--- Mapping Hammer IDs to Buttons (Recursive Search)
+-- Mapping Hammer IDs to Buttons
 local HammerButtons = {
-    BASIC = gui:FindFirstChild("Button_Basic", true),
-    SHOCKWAVE = gui:FindFirstChild("Button_Shockwave", true),
-    MULTI = gui:FindFirstChild("Button_Multi", true),
-    HYBRID = gui:FindFirstChild("Button_Hybrid", true),
-    MASTER = gui:FindFirstChild("Button_Master", true),
+	BASIC = targetGui:FindFirstChild("Button_Basic", true),
+	SHOCKWAVE = targetGui:FindFirstChild("Button_Shockwave", true),
+	MULTI = targetGui:FindFirstChild("Button_Multi", true),
+	HYBRID = targetGui:FindFirstChild("Button_Hybrid", true),
+	MASTER = targetGui:FindFirstChild("Button_Master", true),
 }
 
-
-
 local function forceEquip(hammerId)
-    print("[HudController] Attempting to equip:", hammerId)
-    
-    -- HammerShopServiceのEquipHammer関数を呼び出し
-    local EquipHammerFunc = Net.F(Constants.Functions.EquipHammer)
-    local result = EquipHammerFunc:InvokeServer(hammerId)
-    
-    if result and result.success then
-        print("[HudController] Successfully equipped:", hammerId)
-    else
-        warn("[HudController] Failed to equip:", hammerId)
-    end
+	print("[HudController] Attempting to equip:", hammerId)
+
+	-- HammerShopServiceのEquipHammer関数を呼び出し
+	local EquipHammerFunc = Net.F(Constants.Functions.EquipHammer)
+	local result = EquipHammerFunc:InvokeServer(hammerId)
+
+	if result and result.success then
+		print("[HudController] Successfully equipped:", hammerId)
+	else
+		warn("[HudController] Failed to equip:", hammerId)
+	end
 end
 
 local boundButtons = {}
 local function bindButtons()
-    for hammerId, btn in pairs(HammerButtons) do
-        if btn and not boundButtons[btn] then
-            boundButtons[btn] = true
-            btn.Activated:Connect(function()
-                forceEquip(hammerId)
-            end)
-            print("[HudController] Bound button for:", hammerId)
-        end
-    end
+	for hammerId, btn in pairs(HammerButtons) do
+		if btn and not boundButtons[btn] then
+			boundButtons[btn] = true
+			btn.Activated:Connect(function()
+				forceEquip(hammerId)
+			end)
+			print("[HudController] Bound button for:", hammerId)
+		end
+	end
 end
 
 local function updateStatusLabel(hammerType)
-    local lbl = gui:FindFirstChild("StatusLabel", true) 
-    if lbl then
-        lbl.Text = "EQUIPPED:\n" .. tostring(hammerType)
-    end
+	local lbl = statusLabel
+	if lbl then
+		lbl.Text = "EQUIPPED:\n" .. tostring(hammerType)
+	end
 end
 
-EquipHammerRequest.OnClientEvent:Connect(function(hammerType)
-    print("[HudController] EquipHammerRequest received:", hammerType)
-    updateStatusLabel(hammerType)
+Net.On(Constants.Events.EquipHammerRequest, function(hammerType)
+	print("[HudController] EquipHammerRequest received:", hammerType)
+	updateStatusLabel(hammerType)
 end)
 
 player:GetAttributeChangedSignal("EquippedHammer"):Connect(function()
-    updateStatusLabel(player:GetAttribute("EquippedHammer"))
+	updateStatusLabel(player:GetAttribute("EquippedHammer"))
 end)
 updateStatusLabel(player:GetAttribute("EquippedHammer") or "NONE")
 

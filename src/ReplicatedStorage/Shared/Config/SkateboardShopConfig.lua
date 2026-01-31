@@ -62,6 +62,5 @@ SkateboardShopConfig.Order = {"BASIC", "SPEED", "JUMP", "BALANCED", "ULTIMATE"}
 
 -- 基本速度設定（SkateboardConfigから移行）
 SkateboardShopConfig.BaseSkateboardSpeed = 40
-SkateboardShopConfig.NormalWalkSpeed = 16
 
 return SkateboardShopConfig

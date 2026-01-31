@@ -11,7 +11,8 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local pgui = player:WaitForChild("PlayerGui")
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
-local StageSync = Net.E("StageSync")
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
+local StageSync = Net.E(Constants.Events.StageSync)
 
 local StageController = {}
 
@@ -169,12 +170,12 @@ end
 -- ステージアップ演出
 local function playLevelUpEffect(newLevel)
 	if not effectLayer then return end
-	
+
 	activeEffectCount += 1
 	effectLayer.Visible = true
-	
+
 	playStageUpFX()
-	
+
 	local sound = ReplicatedStorage:FindFirstChild("StageUpSound", true)
 	if sound then sound:Play() end
 
@@ -207,7 +208,7 @@ function StageController.Init()
 
 	StageSync.OnClientEvent:Connect(function(stage, totalSmashed, prevReq, nextReq)
 		if not stageFrame then return end
-		
+
 		stage = tonumber(stage) or 1
 		totalSmashed = tonumber(totalSmashed) or 0
 		prevReq = tonumber(prevReq) or 0
@@ -221,11 +222,11 @@ function StageController.Init()
 		if nextReq and barFill and progressLabel then
 			local denom = math.max(nextReq - prevReq, 1)
 			local t = math.clamp((totalSmashed - prevReq) / denom, 0, 1)
-			
+
 			TweenService:Create(barFill, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				Size = UDim2.new(t, 0, 1, 0)
 			}):Play()
-			
+
 			progressLabel.Text = string.format("%d / %d", totalSmashed, nextReq)
 		elseif barFill and progressLabel then
 			barFill.Size = UDim2.new(1, 0, 1, 0)
@@ -237,7 +238,7 @@ function StageController.Init()
 		end
 		lastStage = stage
 	end)
-	
+
 	print("[StageController] Booted & Initialized.")
 end
 

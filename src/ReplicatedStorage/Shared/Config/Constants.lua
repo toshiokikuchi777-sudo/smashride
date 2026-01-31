@@ -1,114 +1,78 @@
 -- ReplicatedStorage/Shared/Config/Constants.lua
--- 文字列キーの集中管理（指示書 2/4 準拠）
-
 local C = {}
 
-C.RemotesFolderName = "Remotes"
-
--- RemoteEvent 名
+-- イベント名
 C.Events = {
-	-- Score / Currency
-	ScrapChanged = "ScrapChanged",
-	ScoreChanged = "ScoreChanged",
-	CansSmashed = "CansSmashed",        -- 累計破壊数の通知
-
-	-- Cans / Hitting
-	CanCrushed = "CanCrushed",
-	CanCrushResult = "CanCrushResult",
-	CrushCanVisual = "CrushCanVisual",
-
-	-- Hammers
-	SetEquippedHammer = "SetEquippedHammer",
-	EquipHammerRequest = "EquipHammerRequest",
-	HammerUnlockStatus = "HammerUnlockStatus",
-	HammerAbilityResult = "HammerAbilityResult",
-
-	-- Gacha
-	RequestGacha = "RequestGacha",
-	GachaResult = "GachaResult",
-	RequestUnlockSync = "RequestUnlockSync",
-
-	-- Pets
-	RequestEquipPet = "RequestEquipPet",
-	PetInventorySync = "PetInventorySync",
-
-	-- VFX / Misc
-	EffectStateSync = "EffectStateSync",
-	UnlockStateSync = "UnlockStateSync",
-	ShockwaveFired = "ShockwaveFired",
-	ShockwaveVFX = "ShockwaveVFX",
-	MultiplierVFX = "MultiplierVFX",
-
-	-- Stage
-	StageUp = "StageUp",
-	StageSync = "StageSync",
-
-	-- Leaderboard
-	LeaderboardSync = "LeaderboardSync",
-
-	-- Can Restrictions
-	CanLocked = "CanLocked",
-
-	-- Skateboard
-	ToggleSkateboard = "ToggleSkateboard",
-	SkateboardStateSync = "SkateboardStateSync",
-	SkateboardGrindJump = "SkateboardGrindJump",
-	
-	-- Grind
+	GachaStarted = "GachaStarted",
+	GachaCompleted = "GachaCompleted",
+	CanSmashed = "CanSmashed",
+	TotalScoreUpdated = "TotalScoreUpdated",
+	PetEquipped = "PetEquipped",
+	PetUnequipped = "PetUnequipped",
+	HammerEquipped = "HammerEquipped",
+	StageUnlocked = "StageUnlocked",
+	ChestIdUpdated = "ChestIdUpdated",
+	ChestEventStarted = "ChestEventStarted",
+	ChestEventEnded = "ChestEventEnded",
+	FaceTargetSpawned = "FaceTargetSpawned",
+	FaceTargetDamaged = "FaceTargetDamaged",
+	FaceTargetDespawned = "FaceTargetDespawned",
 	GrindStarted = "GrindStarted",
 	GrindEnded = "GrindEnded",
-
-	-- Spawn
-	RequestSpawn = "RequestSpawn",
-	
-	-- Chest Event
-	ChestClaimRequest = "ChestClaimRequest",
+	SkateboardGrindJump = "SkateboardGrindJump",
+	ScoreChanged = "ScoreChanged",
+	CrushCanVisual = "CrushCanVisual",
+	EffectStateSync = "EffectStateSync",
+	RequestGacha = "RequestGacha",
+	StageSync = "StageSync",
+	ToggleSkateboard = "ToggleSkateboard",
+	UnlockStateSync = "UnlockStateSync",
 	ChestSpawned = "ChestSpawned",
+	RewardNotification = "RewardNotification",
+	RequestSpawn = "RequestSpawn",
+	LeaderboardSync = "LeaderboardSync",
+	ScrapChanged = "ScrapChanged",
+	ShockwaveVFX = "ShockwaveVFX",
+	GachaResult = "GachaResult",
+	SkateboardStateSync = "SkateboardStateSync",
 	ChestDespawned = "ChestDespawned",
+	CansSmashed = "CansSmashed",
+	MultiplierVFX = "MultiplierVFX",
 	ChestClaimed = "ChestClaimed",
+	ChestClaimRequest = "ChestClaimRequest",
+	ClaimFeedbackReward = "ClaimFeedbackReward",
+	EquipHammerRequest = "EquipHammerRequest",
 	EventStateSync = "EventStateSync",
-	MoneyCollected = "MoneyCollected",
-
-	-- Face Target Bonus
-	FaceTargetSpawned = "FaceTargetSpawned",
-	FaceTargetHit = "FaceTargetHit",
-	FaceTargetDamaged = "FaceTargetDamaged",
 	FaceTargetDestroyed = "FaceTargetDestroyed",
 	FaceTargetExpiring = "FaceTargetExpiring",
-
-	-- Promotions
-	ClaimFeedbackReward = "ClaimFeedbackReward",
-	RewardNotification = "RewardNotification",
+	FaceTargetHit = "FaceTargetHit",
+	MoneyCollected = "MoneyCollected",
+	PetInventorySync = "PetInventorySync",
+	RequestEquipPet = "RequestEquipPet",
+	StageUp = "StageUp",
+	CanLocked = "CanLocked",
+	CanCrushed = "CanCrushed",
+	CanCrushResult = "CanCrushResult",
+	SetEquippedHammer = "SetEquippedHammer",
+	RequestScoreSync = "RequestScoreSync",
 }
 
--- RemoteFunctions
+-- フォルダ名
+C.RemotesFolderName = "Remotes"
+
+-- 関数名
 C.Functions = {
-	-- Skateboard Shop
+	LoadData = "LoadData",
+	GetEquippedPets = "GetEquippedPets",
+	GetEquippedHammer = "GetEquippedHammer",
 	PurchaseSkateboard = "PurchaseSkateboard",
-	EquipSkateboard = "EquipSkateboard",
-	GetPlayerSkateboards = "GetPlayerSkateboards",
-
-	-- Hammer Shop
-	PurchaseHammer = "PurchaseHammer",
-	EquipHammer = "EquipHammer",
 	GetPlayerHammers = "GetPlayerHammers",
-
-	-- Existing functions
-	RequestPetInventory = "RequestPetInventory",
-	EquipPet = "EquipPet",
-	UnequipPet = "UnequipPet",
+	GetPlayerSkateboards = "GetPlayerSkateboards",
+	EquipHammer = "EquipHammer",
+	EquipSkateboard = "EquipSkateboard",
 	RequestLeaderboard = "RequestLeaderboard",
-	RequestGacha = "RequestGacha",
-	CheckGamePass = "CheckGamePass",
-}
-
--- データキー（DataServiceで使用）
-C.DataKey = {
-	Scrap = "Scrap",
-	TotalScore = "TotalScore",
-	OwnedPets = "OwnedPets",
-	EquippedPets = "EquippedPets",
-	EquippedHammer = "EquippedHammer",
+	PurchaseHammer = "PurchaseHammer",
+	RequestPetInventory = "RequestPetInventory",
 }
 
 -- アトリビュート名
@@ -119,7 +83,7 @@ C.Attr = {
 }
 
 -- タグ名
-C.Tag = {
+C.Tags = {
 	Can = "CAN",
 	Breakable = "BREAKABLE",
 	GrindRail = "GRIND_RAIL",

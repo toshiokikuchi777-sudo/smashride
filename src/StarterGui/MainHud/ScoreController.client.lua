@@ -4,13 +4,14 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
+local Constants = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Constants"))
 
 local player = Players.LocalPlayer
 local pgui = player:WaitForChild("PlayerGui")
 
-local scoreChanged = Net.E("ScoreChanged")
-local scrapChanged = Net.E("ScrapChanged")
-local cansSmashed = Net.E("CansSmashed")
+local scoreChanged = Net.E(Constants.Events.ScoreChanged)
+local scrapChanged = Net.E(Constants.Events.ScrapChanged)
+local cansSmashed = Net.E(Constants.Events.CansSmashed)
 
 -- =========================
 -- 🎨 プレミアムデザイン定数
@@ -55,13 +56,13 @@ local function createScoreCard(name, title, icon, color, yPos)
 	container.Position = UDim2.new(0.05, 0, yPos, 0)
 	container.BackgroundColor3 = CARD_BG
 	container.Parent = mainFrame
-	
+
 	Instance.new("UICorner", container).CornerRadius = UDim.new(0.4, 0)
 	local stroke = Instance.new("UIStroke", container)
 	stroke.Thickness = 2.5
 	stroke.Color = color
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	
+
 	-- タイトル & アイコン
 	local titleLbl = Instance.new("TextLabel")
 	titleLbl.Size = UDim2.new(0.4, 0, 0.6, 0)
@@ -74,7 +75,7 @@ local function createScoreCard(name, title, icon, color, yPos)
 	titleLbl.TextXAlignment = Enum.TextXAlignment.Left
 	titleLbl.Parent = container
 	Instance.new("UIStroke", titleLbl).Thickness = 1
-	
+
 	-- 数値ラベル (アニメーション対象)
 	local valLbl = Instance.new("TextLabel")
 	valLbl.Name = "ValueLabel"
@@ -88,11 +89,11 @@ local function createScoreCard(name, title, icon, color, yPos)
 	valLbl.TextXAlignment = Enum.TextXAlignment.Right
 	valLbl.Parent = container
 	valLbl:SetAttribute("CurrentValue", 0) -- 現在のアニメーション上の値を保持
-	
+
 	local valStroke = Instance.new("UIStroke", valLbl)
 	valStroke.Thickness = 2
 	valStroke.Color = STROKE_COLOR
-	
+
 	return valLbl
 end
 
@@ -138,32 +139,29 @@ local lastLabel   = createColorLabel("LAST",   Color3.fromRGB(180, 180, 180), 6)
 lastLabel.Text = "LAST: -"
 
 -- =========================
--- 🔄 アニメーション & 更新ロジック
+-- ✨ プレミアムアニメーション (Tweenベース)
 -- =========================
 
--- 数値を「チャリンチャリン」と加算させるアニメーション
 local function animateValue(lbl, targetValue)
-	local startValue = lbl:GetAttribute("CurrentValue") or 0
-	print(string.format("[ScoreHUD] Animating %s: %s -> %s", lbl.Name, tostring(startValue), tostring(targetValue)))
-	
-	if startValue == targetValue then return end
+	local currentValue = lbl:GetAttribute("CurrentValue") or 0
+	if currentValue == targetValue then return end
+
 	lbl:SetAttribute("CurrentValue", targetValue)
-	
-	-- 数値の変化を Tween 用の NumberValue を使って制御
+
 	local valObj = Instance.new("NumberValue")
-	valObj.Value = startValue
-	
-	local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-	local tween = TweenService:Create(valObj, tweenInfo, { Value = targetValue })
-	
-	-- ポヨヨン演出
+	valObj.Value = currentValue
+
+	local duration = 0.5
+	local tween = TweenService:Create(valObj, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Value = targetValue})
+
+	-- ポップアップ効果
 	local container = lbl.Parent
 	if container and container:IsA("Frame") then
 		container:TweenSize(UDim2.new(1.05, 0, 0.13, 0), "Out", "Back", 0.1, true, function()
 			container:TweenSize(UDim2.new(0.95, 0, 0.12, 0), "Out", "Quad", 0.2, true)
 		end)
 	end
-	
+
 	-- 毎フレーム数値を更新
 	local connection
 	connection = game:GetService("RunService").RenderStepped:Connect(function()
@@ -173,13 +171,13 @@ local function animateValue(lbl, targetValue)
 		end
 		lbl.Text = formatNum(math.floor(valObj.Value))
 	end)
-	
+
 	tween.Completed:Connect(function()
 		if connection then connection:Disconnect() end
 		if lbl then lbl.Text = formatNum(targetValue) end
 		valObj:Destroy()
 	end)
-	
+
 	tween:Play()
 end
 
@@ -206,7 +204,7 @@ scoreChanged.OnClientEvent:Connect(function(payload)
 	print("[ScoreHUD] Received ScoreChanged payload")
 	if typeof(payload) ~= "table" then return end
 	animateValue(scrapValue, payload.total or 0)
-	
+
 	updateSimpleText(redLabel,    "RED: "    .. formatNum(payload.red))
 	updateSimpleText(blueLabel,   "BLUE: "   .. formatNum(payload.blue))
 	updateSimpleText(greenLabel,  "GREEN: "  .. formatNum(payload.green))
@@ -221,3 +219,15 @@ cansSmashed.OnClientEvent:Connect(function(count)
 end)
 
 print("[ScoreController] Premium HUD Initialized with Debug Logs.")
+
+-- 初期スコアをサーバーにリクエスト
+task.wait(0.5) -- サーバー側の初期化を待つ
+local CanService = game:GetService("ReplicatedStorage"):FindFirstChild("Shared")
+if CanService then
+	-- サーバーに初期スコアの再送信を要求
+	local RequestScoreSync = Net.E("RequestScoreSync")
+	if RequestScoreSync then
+		RequestScoreSync:FireServer()
+		print("[ScoreController] Requested initial score sync")
+	end
+end
